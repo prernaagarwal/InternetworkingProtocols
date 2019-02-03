@@ -9,7 +9,7 @@
 int main(int argc, char * argv[])
 {
     	
-	if (argc < 3)
+	if (argc < 4)
 	{
 		printf("Missing arguments. Exiting...\n");
 		exit(0);
@@ -17,9 +17,9 @@ int main(int argc, char * argv[])
 
 	struct sockaddr_in serv_addr;
     
-	//char * address = argv[1];
+	char buffer[256];
 	int server_port = atoi(argv[2]);
-//	printf( "argv[ %d ] = %d\n", 2, server_port);
+	char * file = argv[3];
 
 	// socket(domain, type, protocol)
 	int clientSocket = socket(AF_INET, SOCK_DGRAM,0);
@@ -46,6 +46,23 @@ int main(int argc, char * argv[])
 		exit(0); 
 	} 
 
+	// ssize_t write(int fs, const void *buf, ssize_t N);
+	// N bytes from buf to the file or socket associated with fs. N should not be greater than INT_MAX (defined in the limits.h header file). 
+	// If N is zero, write() simply returns 0 without attempting any other action.
+	if (write(clientSocket,file,strlen(file)))
+	{
+		printf("Can't write to socket!");
+	}
+
+   	
+	bzero(buffer,256); // reset buffer to 0
+       	
+	if (read(clientSocket,buffer,255) < 0)
+	{
+		printf("ERROR reading from socket");
+	}
+	printf("%s\n",buffer);
+	close(clientSocket);
 
 	return 0;
 }
