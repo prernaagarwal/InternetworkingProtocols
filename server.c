@@ -1,8 +1,7 @@
 #include <string.h>
 #include <stdio.h>
-#include <iostream.h>
-
-int main()
+#include <stdlib.h>
+int main(int argc, char * argv[])
 {
 
 
