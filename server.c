@@ -46,7 +46,7 @@ int main(int argc, char * argv[])
 	}
 	//LISTEN
 	listen(sock, 5);//file descriptor and size of backlog =7.
-
+	sleep(10);
 	//ACCEPT
 	clisize = sizeof(client_addr);
 	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
