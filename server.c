@@ -59,7 +59,7 @@ int main(int argc, char * argv[])
 		error_msg("Error while listening");
 	}
 	
-	//sleep(10);
+	sleep(10);
 	//ACCEPT
 	clisize = sizeof(client_addr);
 	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
