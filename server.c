@@ -44,11 +44,7 @@ int main(int argc, char * argv[])
 	serv_addr.sin_port = htons(portnum);
 
 	//bind socket with server
-<<<<<<< HEAD
 	if(bind(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-=======
-	if(bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
->>>>>>> 4f9317bc5cd10d498440acf9ead4d0b3e14fb5ec
 	{
 		error_msg("Error, could not bind.");
 		exit(1);
@@ -62,11 +58,8 @@ int main(int argc, char * argv[])
 	{
 		error_msg("Error while listening");
 	}
-<<<<<<< HEAD
+	
 	//sleep(10);
-
-=======
->>>>>>> 4f9317bc5cd10d498440acf9ead4d0b3e14fb5ec
 	//ACCEPT
 	clisize = sizeof(client_addr);
 	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
