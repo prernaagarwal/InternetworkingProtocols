@@ -12,22 +12,24 @@ void error_msg(const char * message);
 
 int main(int argc, char * argv[])
 {
-	int sock, newsock, portnum, clisize, ret;//file descriptors, port number, client address size,
+	int sock, newsock, portnum, ret; //clisize, ret;//file descriptors, port number, client address size,
 	//and variable to caputer return values
 	char buffer[256];
 	struct sockaddr_in serv_addr;//server address
 	struct sockaddr_in client_addr;//client address
+	socklen_t clisize;
 
 	if(argc < 2)
 	{
 		printf("No Port Number Provided");
 		exit(1);
 	}
+
 	bzero((char *) &serv_addr, sizeof(serv_addr));
 	bzero((char *) &client_addr, sizeof(client_addr));
-	//set the port num to what was passed in. format server port
-	portnum = atoi(argv[1]);
 	
+	//set the port num to what was passed in. format server port
+	portnum = atoi(argv[1]);	
 	
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if(sock == -1)
@@ -42,7 +44,7 @@ int main(int argc, char * argv[])
 	serv_addr.sin_port = htons(portnum);
 
 	//bind socket with server
-	if(bind(sock, (struct sock_addr *)&serv_addr, sizeof(serv_addr)) < 0)
+	if(bind(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
 	{
 		error_msg("Error, could not bind.");
 		exit(1);
@@ -56,6 +58,7 @@ int main(int argc, char * argv[])
 		error_msg("Error while listening");
 	}
 	//sleep(10);
+
 	//ACCEPT
 	clisize = sizeof(client_addr);
 	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
