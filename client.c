@@ -28,18 +28,19 @@ int main(int argc, char * argv[])
 		printf("Socket Connection failed!");
 		return 0;
 	}
-	printf("clientSocket: %d\n", clientSocket);
+//	printf("clientSocket: %d\n", clientSocket);
     	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(server_port);
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);	
-	if (bind(clientSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+
+	if (bind(clientSocket, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
 		printf("bind failed");
 			return 0;
 	}
 	else
 	{
-		printf("bind successful");
+		printf("bind successful\n");
 	}
 
 	//The inet_pton() function converts an Internet address in its standard text format into its numeric binary form. The argument af specifies the family of the address.

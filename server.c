@@ -14,7 +14,7 @@ int main(int argc, char * argv[])
 {
 	int sock, newsock, portnum, ret; //clisize, ret;//file descriptors, port number, client address size,
 	//and variable to caputer return values
-	char buffer[256];
+	//char buffer[256];
 	struct sockaddr_in serv_addr;//server address
 	struct sockaddr_in client_addr;//client address
 	socklen_t clisize;
@@ -44,21 +44,29 @@ int main(int argc, char * argv[])
 	serv_addr.sin_port = htons(portnum);
 
 	//bind socket with server
+<<<<<<< HEAD
 	if(bind(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+=======
+	if(bind(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+>>>>>>> 4f9317bc5cd10d498440acf9ead4d0b3e14fb5ec
 	{
 		error_msg("Error, could not bind.");
 		exit(1);
 	}
 	else
 		printf("We are now bound!");
+	//sleep(10);
 	//LISTEN
 	int status = listen(sock, 5);//file descriptor and size of backlog =7.
 	if(status == -1)
 	{
 		error_msg("Error while listening");
 	}
+<<<<<<< HEAD
 	//sleep(10);
 
+=======
+>>>>>>> 4f9317bc5cd10d498440acf9ead4d0b3e14fb5ec
 	//ACCEPT
 	clisize = sizeof(client_addr);
 	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
