@@ -32,6 +32,9 @@ int main(int argc, char * argv[])
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if(sock == -1)
 		error_msg("Cannot Open Socket");
+	else
+		printf("Socket now open");
+
 
 	//set the servers information
 	serv_addr.sin_family = AF_INET;
@@ -44,14 +47,22 @@ int main(int argc, char * argv[])
 		error_msg("Error, could not bind.");
 		exit(1);
 	}
+	else
+		printf("We are now bound!");
 	//LISTEN
-	listen(sock, 5);//file descriptor and size of backlog =7.
-	sleep(10);
+	int status = listen(sock, 5);//file descriptor and size of backlog =7.
+	if(status == -1)
+	{
+		error_msg("Error while listening");
+	}
+	//sleep(10);
 	//ACCEPT
 	clisize = sizeof(client_addr);
 	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
 	if(newsock < 0)
 		error_msg("Error, Could not accept");
+	else
+		printf("CONNECTED");
 
 	return 0;
 }
