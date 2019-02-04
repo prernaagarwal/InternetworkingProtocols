@@ -62,7 +62,7 @@ int main(int argc, char * argv[])
 	// ssize_t write(int fs, const void *buf, ssize_t N);
 	// N bytes from buf to the file or socket associated with fs. N should not be greater than INT_MAX (defined in the limits.h header file). 
 	// If N is zero, write() simply returns 0 without attempting any other action.
-	if (sendto(clientSocket, "hello :)", sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	if (sendto(clientSocket, file, sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 printf( "sendto failed" );
 	}
