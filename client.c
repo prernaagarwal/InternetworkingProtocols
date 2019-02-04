@@ -33,7 +33,7 @@ int main(int argc, char * argv[])
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(server_port);
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);	
-
+/*
 	if (bind(clientSocket, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
 		printf("bind failed");
 			return 0;
@@ -42,7 +42,7 @@ int main(int argc, char * argv[])
 	{
 		printf("bind successful\n");
 	}
-
+*/
 
 	//The inet_pton() function converts an Internet address in its standard text format into its numeric binary form. The argument af specifies the family of the address.
 	if(inet_pton(AF_INET,argv[1],&(serv_addr.sin_addr)) < 0)
