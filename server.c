@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-
+#include "packets.h"
 
 //prototypes
 void error_msg(const char * message);
