@@ -58,9 +58,13 @@ int main(int argc, char * argv[])
 
 //recieve connection
 	int count = recvfrom(sock, buffer, 256, 0, (struct sockaddr*) &client_addr, &clisize);
-	printf("Recieved %s \n ",buffer);
+	if(count < 0)
+		error_msg("Recieve Failed");
+	else
+		printf("Recieved %s \n ",buffer);
 	
-	
+
+	close(fd);
 //reply once we get connection request 
 //recieve connection ack
 
