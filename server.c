@@ -58,7 +58,8 @@ int main(int argc, char * argv[])
 	{
 		error_msg("Error while listening");
 	}
-	
+	else
+		printf("Listening")	
 	sleep(10);
 	//ACCEPT
 	clisize = sizeof(client_addr);

@@ -43,22 +43,31 @@ int main(int argc, char * argv[])
 		printf("bind successful\n");
 	}
 
+
 	//The inet_pton() function converts an Internet address in its standard text format into its numeric binary form. The argument af specifies the family of the address.
 	if(inet_pton(AF_INET,argv[1],&(serv_addr.sin_addr)) < 0)
 	{
 		printf("Error: Invalid address \n"); 
 		exit(0);
 	}
-
+/*
 	if (connect(clientSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
 	{ 
 		printf("Connection failed! \n"); 
 		exit(0); 
 	} 
-
+	else
+		printf("Connected!\n")
+*/
 	// ssize_t write(int fs, const void *buf, ssize_t N);
 	// N bytes from buf to the file or socket associated with fs. N should not be greater than INT_MAX (defined in the limits.h header file). 
 	// If N is zero, write() simply returns 0 without attempting any other action.
+	if (sendto(clientSocket, "file", sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	{
+		 printf( "sendto failed" );
+	}
+	printf( "message sent: %s\n", file );
+/*
 	if (write(clientSocket,file,strlen(file)))
 	{
 		printf("Can't write to socket!");
@@ -72,6 +81,7 @@ int main(int argc, char * argv[])
 		printf("ERROR reading from socket");
 	}
 	printf("%s\n",buffer);
+*/
 	close(clientSocket);
 
 	return 0;
