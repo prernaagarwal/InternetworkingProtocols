@@ -14,7 +14,7 @@ int main(int argc, char * argv[])
 {
 	int sock, newsock, portnum, ret; //clisize, ret;//file descriptors, port number, client address size,
 	//and variable to caputer return values
-	//char buffer[256];
+	char buffer[256];
 	struct sockaddr_in serv_addr;//server address
 	struct sockaddr_in client_addr;//client address
 	socklen_t clisize;
@@ -32,6 +32,7 @@ int main(int argc, char * argv[])
 	portnum = atoi(argv[1]);	
 	
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
+	printf("%d", sock);
 	if(sock == -1)
 		error_msg("Cannot Open Socket");
 	else
@@ -51,22 +52,51 @@ int main(int argc, char * argv[])
 	}
 	else
 		printf("We are now bound!");
+
+
+	clisize = sizeof(client_addr);
+
+//recieve connection
+	int count = recvfrom(sock, buffer, 256, 0, (struct sockaddr*) &client_addr, &clisize);
+	printf("Recieved %s \n ",buffer);
+	
+	
+//reply once we get connection request 
+//recieve connection ack
+
+//then start sending files.
+
+
 	//sleep(10);
 	//LISTEN
-	int status = listen(sock, 5);//file descriptor and size of backlog =7.
+	/*int status = listen(sock, 5);//file descriptor and size of backlog =7.
+	printf("%d AND %d", sock, status);
 	if(status == -1)
 	{
 		error_msg("Error while listening");
-	}
+	}*/
 	
 	//sleep(10);
 	//ACCEPT
-	clisize = sizeof(client_addr);
-	newsock = accept(sock, (struct sockaddr *) &client_addr, &clisize);
+
+/*	clisize = sizeof(client_addr);
+	newsock = myaccept(sock, (struct sockaddr *) &client_addr, &clisize);
 	if(newsock < 0)
 		error_msg("Error, Could not accept");
 	else
 		printf("CONNECTED");
+
+	bzero(buffer, 256);
+	ret = read(newsock, buffer, 255);
+	if(ret < 0)
+		error_msg("Error reading from socket");
+	else
+		printf("The message: %s", buffer);
+	ret = write(newsock, "Message Recieved",16);
+	if(ret < 0)
+		error_msg("Error writing to socket");
+*/
+	
 
 	return 0;
 }
@@ -76,4 +106,8 @@ void error_msg(const char * message)
 	perror(message);
 	exit(1);
 }
-
+/*	
+int myaccept(int sockid, struct sockaddr * clientaddr, socklen_t clientlen)
+{
+	return 0;
+}*/
