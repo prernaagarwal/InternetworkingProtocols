@@ -1,5 +1,8 @@
 #include "packets.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 //constructor
 packet::packet(packettype tp, int sq_num, int size_data, void * buff)
 {
@@ -12,5 +15,5 @@ packet::packet(packettype tp, int sq_num, int size_data, void * buff)
 
 packet::~packet()
 {
-	free data;
+	free(data);
 }

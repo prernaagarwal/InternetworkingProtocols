@@ -5,7 +5,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <iostream>
 #include "packets.h"
+using namespace std;
 
 const int PCKLEN = 1024;//1kb MAX
 //prototypes
@@ -22,21 +24,25 @@ int main(int argc, char * argv[])
 	socklen_t clisize;
 	int n=0;
 	int seq =0;
+	
+	cout<<"In server"<<endl;
 
 	if(argc < 2)
 	{
 		printf("No Port Number Provided");
 		exit(1);
 	}
-
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	bzero((char *) &client_addr, sizeof(client_addr));
+	
+	memset(&serv_addr, 0, sizeof(serv_addr));
+	//bzero((char *) &serv_addr, sizeof(serv_addr));
+	//bzero((char *) &client_addr, sizeof(client_addr));
 	
 	//set the port num to what was passed in. format server port
 	portnum = atoi(argv[1]);	
-	
+
+	cout<<"BEFORE OPENING SOCKET" <<endl;	
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
-	printf("%d", sock);
+	cout<<"SOCK: "<<sock;
 	if(sock == -1)
 		error_msg("Cannot Open Socket");
 	else
@@ -62,16 +68,16 @@ int main(int argc, char * argv[])
 	buffer = malloc(PCKLEN);//creating buffer for maximum packet length
 //recieve connection
 	
-	while(1){
+//	while(1){
 		n = recvfrom(sock, buffer, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);
-		if(count < 0)
+		if(n < 0)
 			error_msg("Recieve Failed");
 		else
-			printf("Recieved %s \n ",buffer);
+			cout<<"Recieved";
 		packet my_pack;
 		//deserialize(my_pack, buffer);
 	
-	}//end of while(1) for sending and recv packets. 
+//	}//end of while(1) for sending and recv packets. 
 	
 
 	close(sock);

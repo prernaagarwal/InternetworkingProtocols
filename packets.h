@@ -1,4 +1,4 @@
-
+#include <iostream>
 //3way handshake structs
 /*struct SYN{
 	char type;
@@ -46,14 +46,15 @@ typedef enum{
 }packettype;
 
 //single packet for handshake requests, acks, and data req's and acks. 
-typedef struct{
-	//this isnt C++ so i can't actually do this.
-	void * serialize(packettype tp, int sq_num, int size_data, void * buff);
-	void * deserialize(void * buff);
+struct packet{
+	
+	packet(packettype tp, int sq_num, int size_data, void * buff);
+	packet(void * buff);//acts as deserialization
+	~packet();
 
 	packettype type;
 	int sequence_num;
 	int size;
 	void * data;
-}packet;
+};
 
