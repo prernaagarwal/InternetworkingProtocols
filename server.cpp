@@ -4,8 +4,10 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include "packets.h"
 
+const int PCKLEN = 1024;//1kb MAX
 //prototypes
 void error_msg(const char * message);
 
@@ -14,10 +16,12 @@ int main(int argc, char * argv[])
 {
 	int sock, newsock, portnum, ret; //clisize, ret;//file descriptors, port number, client address size,
 	//and variable to caputer return values
-	char buffer[256];
+	void* buffer;
 	struct sockaddr_in serv_addr;//server address
 	struct sockaddr_in client_addr;//client address
 	socklen_t clisize;
+	int n=0;
+	int seq =0;
 
 	if(argc < 2)
 	{
@@ -55,13 +59,19 @@ int main(int argc, char * argv[])
 
 
 	clisize = sizeof(client_addr);
-
+	buffer = malloc(PCKLEN);//creating buffer for maximum packet length
 //recieve connection
-	int count = recvfrom(sock, buffer, sizeof(buffer)-1, 0, (struct sockaddr*) &client_addr, &clisize);
-	if(count < 0)
-		error_msg("Recieve Failed");
-	else
-		printf("Recieved %s \n ",buffer);
+	
+	while(1){
+		n = recvfrom(sock, buffer, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);
+		if(count < 0)
+			error_msg("Recieve Failed");
+		else
+			printf("Recieved %s \n ",buffer);
+		packet my_pack;
+		//deserialize(my_pack, buffer);
+	
+	}//end of while(1) for sending and recv packets. 
 	
 
 	close(sock);
@@ -115,3 +125,11 @@ int myaccept(int sockid, struct sockaddr * clientaddr, socklen_t clientlen)
 {
 	return 0;
 }*/
+
+void send_ack_packet(int sockID, packettype type, int *sequence_num)
+{
+}
+
+void send_data_packet(int sockID, packettype type, int *sequence_num, void* buffer, int size)
+{
+}

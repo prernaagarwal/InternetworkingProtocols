@@ -4,7 +4,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-#include <packets.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include "packets.h"
 
 
 int main(int argc, char * argv[])
