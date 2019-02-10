@@ -9,6 +9,7 @@
 #include "packets.h"
 using namespace std;
 
+bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype type);
 int main(int argc, char * argv[])
 {
     	
@@ -52,22 +53,41 @@ int main(int argc, char * argv[])
 	else
 		printf("Connected!\n")
 */
-	// ssize_t write(int fs, const void *buf, ssize_t N);
-	// N bytes from buf to the file or socket associated with fs. N should not be greater than INT_MAX (defined in the limits.h header file). 
-	// If N is zero, write() simply returns 0 without attempting any other action.
-
-	/* ORIGINAL CODE TO SEND A FILE
+	
+/* 	 ORIGINAL CODE TO SEND A FILE
 	if (sendto(clientSocket, file, sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 printf( "sendto failed" );
 	}
 
 	cout <<"message sent: "<< file ;
-	*/
+*/
 
 	//sending SYN packet
+ 	
+	if (myConnection(clientSocket, serv_addr, SYN))
+	{
+		cout<<"Connection with Server established Successfully!\n";
+	}
+	else
+	{
+		cout<<"Three way handshake connection failed!\n";
+		
+	}
 
-	packet connect(SYN, 0, 0, (void*)calloc(1,PCKLEN));	
+	//File request
+	
+
+	close(clientSocket);
+
+	return 0;
+}
+
+bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype type)
+{
+
+	//sending SYN packet
+	packet connect(type, 0, 0, (void*)calloc(1,PCKLEN));	
 	void * ptr = connect.serialize();
 	if (sendto(clientSocket, ptr, sizeof(ptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
@@ -75,11 +95,8 @@ int main(int argc, char * argv[])
 	}
 
 	cout <<"SYN packet sent";
-	delete(ptr)	
-		
-	close(clientSocket);
+	free(ptr);	
 
-	return 0;
+	return true;
+
 }
-
-
