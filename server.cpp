@@ -9,7 +9,6 @@
 #include "packets.h"
 using namespace std;
 
-const int PCKLEN = 1024;//1kb MAX
 //prototypes
 void error_msg(const char * message);
 
@@ -24,6 +23,7 @@ int main(int argc, char * argv[])
 	socklen_t clisize;
 	int n=0;
 	int seq =0;
+	char *filename;
 	
 	cout<<"In server"<<endl;
 
@@ -40,13 +40,11 @@ int main(int argc, char * argv[])
 	//set the port num to what was passed in. format server port
 	portnum = atoi(argv[1]);	
 
-	cout<<"BEFORE OPENING SOCKET" <<endl;	
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
-	cout<<"SOCK: "<<sock;
 	if(sock == -1)
 		error_msg("Cannot Open Socket");
 	else
-		printf("Socket now open");
+		printf("Socket now open \n");
 
 
 	//set the servers information
@@ -61,23 +59,40 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 	else
-		printf("We are now bound!");
+		printf("We are now bound!\n");
 
 
 	clisize = sizeof(client_addr);
 	buffer = malloc(PCKLEN);//creating buffer for maximum packet length
 //recieve connection
 	
-//	while(1){
+	while(1){
+		//will be the file request
 		n = recvfrom(sock, buffer, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);
 		if(n < 0)
 			error_msg("Recieve Failed");
 		else
-			cout<<"Recieved";
-		packet my_pack;
-		//deserialize(my_pack, buffer);
+			cout<<"Recieved"<<endl;
+	//	cout<<"buffer: "<<(char *)buffer<<endl;//casts the buffer to void *, shows the "filename" we recieved from client
+		
+		//check if we have the file in question
+		if(access((char *)buffer, F_OK) == -1){
+			error_msg("We do not have that file.");
+		}
+		else{
+			cout<<"File has been found!" <<endl;
+		}
+/*		filename = (char *)buffer;	
+		printf("%s",filename);*/
+		
+			//command line. 
+	//need to send packet with file size
+	//recv the ack from client before transmitting.
+
+	//	packet mypack;
+	//	mypack.deserialize(buffer);
 	
-//	}//end of while(1) for sending and recv packets. 
+	}//end of while(1) for sending and recv packets. 
 	
 
 	close(sock);
@@ -134,8 +149,18 @@ int myaccept(int sockid, struct sockaddr * clientaddr, socklen_t clientlen)
 
 void send_ack_packet(int sockID, packettype type, int *sequence_num)
 {
+	void * data = malloc(PCKLEN);
+	memset(data, 0, PCKLEN);
+	//create the packet
+	//serialize the packet
+	//sendto
+	//deallocate memory
 }
 
 void send_data_packet(int sockID, packettype type, int *sequence_num, void* buffer, int size)
 {
+	//create the packet
+	//serialize the packet
+	//sendto
+	//deallocate memory
 }

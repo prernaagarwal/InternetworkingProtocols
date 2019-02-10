@@ -1,4 +1,7 @@
 #include <iostream>
+const int PCKLEN = 1024;//1kb MAX
+
+
 //3way handshake structs
 /*struct SYN{
 	char type;
@@ -47,9 +50,9 @@ typedef enum{
 
 //single packet for handshake requests, acks, and data req's and acks. 
 struct packet{
-	
+	packet();	
 	packet(packettype tp, int sq_num, int size_data, void * buff);
-	packet(void * buff);//acts as deserialization
+	void deserialize(void * buff);//deserialize a packet
 	~packet();
 
 	packettype type;
