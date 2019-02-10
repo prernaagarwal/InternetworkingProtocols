@@ -56,13 +56,26 @@ int main(int argc, char * argv[])
 	// ssize_t write(int fs, const void *buf, ssize_t N);
 	// N bytes from buf to the file or socket associated with fs. N should not be greater than INT_MAX (defined in the limits.h header file). 
 	// If N is zero, write() simply returns 0 without attempting any other action.
-	
+
+	packet connect(SYN, 0, 0, (void*)calloc(1,PCKLEN));	
+	void * ptr = connect.serialize();
+	/* ORIGINAL CODE TO SEND A FILE
 	if (sendto(clientSocket, file, sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 printf( "sendto failed" );
 	}
 
 	cout <<"message sent: "<< file ;
+	*/
+
+	//sending packet
+	if (sendto(clientSocket, ptr, sizeof(ptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	{
+		 cout<<"sendto failed\n";
+	}
+
+	cout <<"SYN packet sent";
+	
 	close(clientSocket);
 
 	return 0;
