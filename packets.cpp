@@ -21,7 +21,18 @@ void packet::deserialize(void * buff)
 	
 }
 
-void * packet::serialize(){
+void * packet::serialize()
+{
+	void * b = malloc(sizeof(type)+sizeof(int)+sizeof(int)+sizeof(PCKLEN));
+	int off=0;
+	memcpy(b, &(this->type), sizeof(this->type));
+	off = sizeof(this->type);
+	memcpy(b + off, &(this->sequence_num), sizeof(int));
+	off += sizeof(int);
+	memcpy(b + off, &(this->size), sizeof(int));
+	off += sizeof(int);
+	memcpy(b + off, &(this->data), PCKLEN);
+	return b;
 
 }
 
