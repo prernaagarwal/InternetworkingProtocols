@@ -52,6 +52,7 @@ typedef enum{
 struct packet{
 	packet();	
 	packet(packettype tp, int sq_num, int size_data, void * buff);
+	void * serialize();
 	void deserialize(void * buff);//deserialize a packet
 	~packet();
 

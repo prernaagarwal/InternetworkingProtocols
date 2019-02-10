@@ -21,6 +21,10 @@ void packet::deserialize(void * buff)
 	
 }
 
+void * packet::serialize(){
+
+}
+
 packet::~packet()
 {
 	free(data);

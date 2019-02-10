@@ -3,14 +3,18 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string.h>
 #include <iostream>
 #include "packets.h"
 using namespace std;
 
 //prototypes
 void error_msg(const char * message);
+void send_ack_packet(int sockID, packettype type, int sequence_num, void * data, sockaddr_in client_socket, socklen_t clilen);
+void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
 
 
 int main(int argc, char * argv[])
@@ -24,6 +28,7 @@ int main(int argc, char * argv[])
 	int n=0;
 	int seq =0;
 	char *filename;
+	int filesize = 0;
 	
 	cout<<"In server"<<endl;
 
@@ -82,11 +87,24 @@ int main(int argc, char * argv[])
 		else{
 			cout<<"File has been found!" <<endl;
 		}
-/*		filename = (char *)buffer;	
-		printf("%s",filename);*/
 		
-			//command line. 
-	//need to send packet with file size
+		
+		//need to send packet with file size
+		FILE * file = fopen((char *)buffer, "r");
+		//Gets the size of the file we want
+		struct stat file_stat;
+		stat((char*)buffer, &file_stat);
+		filesize = file_stat.st_size;
+
+		cout<<"file size = " <<filesize<<endl;
+		void * data = malloc(PCKLEN);
+		memcpy(data, &filesize, sizeof(int));//copies the filesize into the pointer to be sent as data	
+		send_ack_packet(sock, SYN_ACK, 2, data, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
+		cout<<"Ack sent"<<endl;
+
+		
+
+		
 	//recv the ack from client before transmitting.
 
 	//	packet mypack;
@@ -102,35 +120,6 @@ int main(int argc, char * argv[])
 //then start sending files.
 
 
-	//sleep(10);
-	//LISTEN
-	/*int status = listen(sock, 5);//file descriptor and size of backlog =7.
-	printf("%d AND %d", sock, status);
-	if(status == -1)
-	{
-		error_msg("Error while listening");
-	}*/
-	
-	//sleep(10);
-	//ACCEPT
-
-/*	clisize = sizeof(client_addr);
-	newsock = myaccept(sock, (struct sockaddr *) &client_addr, &clisize);
-	if(newsock < 0)
-		error_msg("Error, Could not accept");
-	else
-		printf("CONNECTED");
-
-	bzero(buffer, 256);
-	ret = read(newsock, buffer, 255);
-	if(ret < 0)
-		error_msg("Error reading from socket");
-	else
-		printf("The message: %s", buffer);
-	ret = write(newsock, "Message Recieved",16);
-	if(ret < 0)
-		error_msg("Error writing to socket");
-*/
 	
 
 	return 0;
@@ -147,20 +136,27 @@ int myaccept(int sockid, struct sockaddr * clientaddr, socklen_t clientlen)
 	return 0;
 }*/
 
-void send_ack_packet(int sockID, packettype type, int *sequence_num)
+void send_ack_packet(int sockID, packettype type, int sequence_num, void * data, sockaddr_in client_socket,
+ 			socklen_t clilen)
 {
-	void * data = malloc(PCKLEN);
-	memset(data, 0, PCKLEN);
 	//create the packet
+	//cout<<"Sending packet of " <<*(int *)data<<" size"<<endl;
+	packet mypacket(type, sequence_num, 0, data);	
 	//serialize the packet
+	void * to_send = mypacket.serialize();
+	sendto(sockID, to_send, PCKLEN, 0,(struct sockaddr*) &client_socket, clilen);
 	//sendto
-	//deallocate memory
+	
+
 }
 
-void send_data_packet(int sockID, packettype type, int *sequence_num, void* buffer, int size)
+void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size,
+			sockaddr_in client_socket, socklen_t clilen)
 {
 	//create the packet
+	packet mypacket(type, sequence_num, size, buffer);//pass info into constructor.
 	//serialize the packet
+	void * to_send = mypacket.serialize();
 	//sendto
-	//deallocate memory
+	sendto(sockID, to_send, PCKLEN, 0, (struct sockaddr*) &client_socket, clilen);
 }
