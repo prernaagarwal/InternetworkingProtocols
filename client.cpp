@@ -24,6 +24,7 @@ int main(int argc, char * argv[])
 	int server_port = atoi(argv[2]);
 	char * file = argv[3];
 
+	// Create a socket
 	// socket(domain, type, protocol)
 	int clientSocket = socket(AF_INET, SOCK_DGRAM,0);
 	if (clientSocket < 0)

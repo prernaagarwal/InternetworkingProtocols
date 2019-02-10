@@ -18,6 +18,28 @@ packet::packet(packettype tp, int sq_num, int size_data, void * buff)
 
 void packet::deserialize(void * buff)
 {
+	//int off=0;
+	//memcpy(this->type, &(buff), sizeof(this->type));
+	//off = sizeof(this->type);
+	//buff += off;
+	//memcpy(sequence_num, &(buff), sizeof(int));
+	//off += sizeof(int);
+	//buff+=off;
+	//memcpy(size, &(buff), sizeof(int));
+	//off += sizeof(int);
+	//buff+=off;
+
+	packettype *q = (packettype*)buff;    
+	this->type = *q;       
+	q++;    
+	int * p = (int *)q;
+	this->sequence_num = *p;
+	p++;
+	this->size = *p;
+	p++;
+	void * pack = (void *)p;
+	memcpy(this->data, &(pack), PCKLEN);
+
 	
 }
 
@@ -32,6 +54,7 @@ void * packet::serialize()
 	memcpy(b + off, &(this->size), sizeof(int));
 	off += sizeof(int);
 	memcpy(b + off, &(this->data), PCKLEN);
+	//std::cout<< *b;
 	return b;
 
 }
