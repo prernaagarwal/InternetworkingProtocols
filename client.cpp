@@ -32,7 +32,6 @@ int main(int argc, char * argv[])
 		cout<< "Socket Connection failed!\n";
 		return 0;
 	}
-//	printf("clientSocket: %d\n", clientSocket);
     	bzero((char *) &serv_addr, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(server_port);
@@ -57,8 +56,6 @@ int main(int argc, char * argv[])
 	// N bytes from buf to the file or socket associated with fs. N should not be greater than INT_MAX (defined in the limits.h header file). 
 	// If N is zero, write() simply returns 0 without attempting any other action.
 
-	packet connect(SYN, 0, 0, (void*)calloc(1,PCKLEN));	
-	void * ptr = connect.serialize();
 	/* ORIGINAL CODE TO SEND A FILE
 	if (sendto(clientSocket, file, sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
@@ -68,15 +65,21 @@ int main(int argc, char * argv[])
 	cout <<"message sent: "<< file ;
 	*/
 
-	//sending packet
+	//sending SYN packet
+
+	packet connect(SYN, 0, 0, (void*)calloc(1,PCKLEN));	
+	void * ptr = connect.serialize();
 	if (sendto(clientSocket, ptr, sizeof(ptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 cout<<"sendto failed\n";
 	}
 
 	cout <<"SYN packet sent";
-	
+	delete(ptr)	
+		
 	close(clientSocket);
 
 	return 0;
 }
+
+
