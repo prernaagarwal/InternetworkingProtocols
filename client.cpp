@@ -43,17 +43,8 @@ int main(int argc, char * argv[])
 		cout<<"Error: Invalid address \n"; 
 		exit(0);
 	}
-/*
-	if (connect(clientSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
-	{ 
-		printf("Connection failed! \n"); 
-		exit(0); 
-	} 
-	else
-		printf("Connected!\n")
-*/
 	
-/* 	 ORIGINAL CODE TO SEND A FILE
+/* 	 ORIGINAL CODE TO SEND A FILENAME
 	if (sendto(clientSocket, file, sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 printf( "sendto failed" );
@@ -76,7 +67,31 @@ int main(int argc, char * argv[])
 
 	//File request
 	char * file = argv[3];
-	
+	cout <<"Requested File: "<<file << endl;	
+
+	packet filerequest(ACK,1,sizeof(file), file);
+	void * fileptr = filerequest.serialize();
+
+	if (sendto(clientSocket, fileptr, sizeof(fileptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	{
+		 cout<<"sending filename failed\n";
+
+	}
+
+	cout <<"file requested from the server";
+	free(fileptr);	
+
+
+
+
+
+
+
+
+
+
+
+	cout<<"File received\n";
 
 	close(clientSocket);
 
