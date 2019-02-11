@@ -43,7 +43,7 @@ void packet::deserialize(void * buff)
 
 void * packet::serialize()
 {
-	void * buff = malloc(sizeof(type)+sizeof(int)+sizeof(int)+sizeof(PCKLEN));
+	void * buff = malloc(PTR_SIZE);
 	int off=0;
 	memcpy(buff, &(this->type), sizeof(this->type));
 	off = sizeof(this->type);

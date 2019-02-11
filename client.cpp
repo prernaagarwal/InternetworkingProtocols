@@ -23,7 +23,6 @@ int main(int argc, char * argv[])
     
 	char buffer[256];
 	int server_port = atoi(argv[2]);
-	char * file = argv[3];
 
 	// Create a socket
 	// socket(domain, type, protocol)
@@ -76,6 +75,7 @@ int main(int argc, char * argv[])
 	}
 
 	//File request
+	char * file = argv[3];
 	
 
 	close(clientSocket);
@@ -88,14 +88,34 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 
 	//sending SYN packet
 	packet connect(type, 0, 0, (void*)calloc(1,PCKLEN));	
-	void * ptr = connect.serialize();
-	if (sendto(clientSocket, ptr, sizeof(ptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	void * sendptr = connect.serialize();
+	if (sendto(clientSocket, sendptr, sizeof(sendptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 cout<<"sendto failed\n";
+		 return false;
 	}
 
 	cout <<"SYN packet sent";
-	free(ptr);	
+	free(sendptr);	
+
+	//receiving SYN+ACK packet
+	void * rcvptr = malloc(PTR_SIZE);
+	memset(rcvptr, 0, PTR_SIZE);
+	int  serverlen = sizeof(serv_addr);
+	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, (socklen_t*)&serverlen) < 0 )
+	{
+		cout<<"Receivefrom failed!\n";
+		return false;
+	}
+
+	packet received;
+	received.deserialize(rcvptr);
+
+	if(received.type != SYN_ACK) {
+		cout<<"SYN_ACK not received!\n";
+		return false;
+	}
+	free(rcvptr);
 
 	return true;
 

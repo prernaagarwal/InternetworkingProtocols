@@ -1,7 +1,6 @@
 #include <iostream>
 const int PCKLEN = 1024;//1kb MAX
 
-
 //3way handshake structs
 /*struct SYN{
 	char type;
@@ -47,6 +46,8 @@ typedef enum{
 		DATAACK,//Data packet ack
 		CLOSE,//Close connection request/ack
 }packettype;
+
+const int PTR_SIZE = sizeof(packettype)+sizeof(int)+sizeof(int)+sizeof(PCKLEN);
 
 //single packet for handshake requests, acks, and data req's and acks. 
 struct packet{
