@@ -15,6 +15,7 @@ using namespace std;
 void error_msg(const char * message);
 void send_ack_packet(int sockID, packettype type, int sequence_num, void * data, sockaddr_in client_socket, socklen_t clilen);
 void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
+void connect(int sock, sockaddr_in client_socket, socklen_t clilen);
 
 
 int main(int argc, char * argv[])
@@ -70,6 +71,31 @@ int main(int argc, char * argv[])
 	clisize = sizeof(client_addr);
 	buffer = malloc(PCKLEN);//creating buffer for maximum packet length
 //recieve connection
+
+
+	//connect with the client prior to file request
+	//connect(sock, (struct sockaddr*) &client_addr, clisize);
+	void * synbuff = malloc(PCKLEN);
+	cout<<"IN CONNECT"<<endl;	
+	n = recvfrom(sock,synbuff, PCKLEN, 0, (struct sockaddr*)&client_addr, &clisize); 
+	if(n < 0)
+		error_msg("Syn Recieve Failed.");
+
+	packet recieved;
+	recieved.deserialize(synbuff);
+	
+	
+	if(recieved.type != SYN)
+		error_msg("Expecting SYN packet.");
+	
+	cout<<"SYN ACCEPTED" <<endl;
+//	void * synackbuff = malloc(PCKLEN);
+//	memset(synackbuff, 0,PCKLEN);
+	send_ack_packet(sock, SYN_ACK, 1, NULL, client_addr, clisize);
+	//connect(sock, client_addr, clisize);
+	
+
+
 	
 		//will be the file request
 	n = recvfrom(sock, buffer, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);
@@ -149,6 +175,23 @@ void error_msg(const char * message)
 	exit(1);
 }
 
+void connect(int sock, sockaddr_in client_socket, socklen_t clilen){
+//	void * buff = malloc(PCKLEN);
+	cout<<"IN CONNECT"<<endl;	
+//	recvfrom(sock,buff, PCKLEN, 0, (struct sockaddr*)&client_socket, &clilen); 
+//	packet recieved;
+//	recieved.deserialize(buff);
+//	cout<<"SYN ACCEPTED" <<endl;
+
+//	if(recieved.type != SYN)
+//		error_msg("Expecting SYN packet.");
+	void * data = malloc(PCKLEN);
+	memset(data, 0, PCKLEN);
+	send_ack_packet(sock, SYN_ACK, 2, data, client_socket, clilen);
+		
+
+}
+
 void send_ack_packet(int sockID, packettype type, int sequence_num, void * data, sockaddr_in client_socket,
  			socklen_t clilen)
 {
@@ -173,3 +216,4 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	//sendto
 	sendto(sockID, to_send, PCKLEN, 0, (struct sockaddr*) &client_socket, clilen);
 }
+

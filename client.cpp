@@ -130,6 +130,7 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 		cout<<"Receivefrom failed!\n";
 		return false;
 	}
+	cout<<"Packet Recieved."<<endl;
 
 	packet received;
 	received.deserialize(rcvptr);
@@ -138,6 +139,7 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 		cout<<"SYN_ACK not received!\n";
 		return false;
 	}
+	cout<<"SYN_ACK RECIEVED"<<endl;
 	//free(rcvptr);
 
 	return true;
