@@ -79,7 +79,7 @@ int main(int argc, char * argv[])
 	}
 
 	cout <<"file requested from the server";
-	free(fileptr);	
+	//free(fileptr);	
 
 
 
@@ -110,8 +110,8 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 		 return false;
 	}
 
-	cout <<"SYN packet sent";
-	free(sendptr);	
+	cout <<"SYN packet sent\n";
+	//delete(sendptr);	
 
 	//receiving SYN+ACK packet
 	void * rcvptr = malloc(PTR_SIZE);
@@ -130,7 +130,7 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 		cout<<"SYN_ACK not received!\n";
 		return false;
 	}
-	free(rcvptr);
+	//free(rcvptr);
 
 	return true;
 
