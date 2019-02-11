@@ -13,9 +13,9 @@ using namespace std;
 
 //prototypes
 void error_msg(const char * message);
-void send_ack_packet(int sockID, packettype type, int sequence_num, void * data, sockaddr_in client_socket, socklen_t clilen);
+void send_ack_packet(int sockID, packettype type, int sequence_num, sockaddr_in client_socket, socklen_t clilen);
 void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
-void connect(int sock, sockaddr_in client_socket, socklen_t clilen);
+bool myconnect(int sock, struct sockaddr_in client_socket, socklen_t clilen, packettype type);
 
 
 int main(int argc, char * argv[])
@@ -75,8 +75,9 @@ int main(int argc, char * argv[])
 
 	//connect with the client prior to file request
 	//connect(sock, (struct sockaddr*) &client_addr, clisize);
+	
 	void * synbuff = malloc(PCKLEN);
-	cout<<"IN CONNECT"<<endl;	
+
 	n = recvfrom(sock,synbuff, PCKLEN, 0, (struct sockaddr*)&client_addr, &clisize); 
 	if(n < 0)
 		error_msg("Syn Recieve Failed.");
@@ -87,14 +88,17 @@ int main(int argc, char * argv[])
 	
 	if(recieved.type != SYN)
 		error_msg("Expecting SYN packet.");
-	
-	cout<<"SYN ACCEPTED" <<endl;
+	else 
+		cout<<"SYN ACCEPTED" <<endl;
 //	void * synackbuff = malloc(PCKLEN);
 //	memset(synackbuff, 0,PCKLEN);
-	send_ack_packet(sock, SYN_ACK, 1, NULL, client_addr, clisize);
-	//connect(sock, client_addr, clisize);
-	
+//	send_ack_packet(sock, SYN_ACK, 1, client_addr, clisize);
 
+	
+	if(myconnect(sock, client_addr, clisize, SYN_ACK) != true)
+		error_msg("cant connect");
+	
+	
 
 	
 		//will be the file request
@@ -128,8 +132,8 @@ int main(int argc, char * argv[])
 	//create pointer to point to the file size so that we may pass this back to the client in our SYN_ACK
 	void * data = malloc(PCKLEN);
 	memcpy(data, &filesize, sizeof(int));//copies the filesize into the pointer to be sent as data	
-	send_ack_packet(sock, SYN_ACK, 2, data, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
-	cout<<"Ack sent"<<endl;//confirmation we sent the ACK.
+	send_data_packet(sock, SYN_ACK, 2, data, PCKLEN, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
+	cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
 
 			
 	//recv the ack from client before transmitting file. COMMENTED OUT THE RECVFROM AND DESERIALIZE FOR TIME BEING
@@ -175,33 +179,39 @@ void error_msg(const char * message)
 	exit(1);
 }
 
-void connect(int sock, sockaddr_in client_socket, socklen_t clilen){
-//	void * buff = malloc(PCKLEN);
-	cout<<"IN CONNECT"<<endl;	
-//	recvfrom(sock,buff, PCKLEN, 0, (struct sockaddr*)&client_socket, &clilen); 
-//	packet recieved;
-//	recieved.deserialize(buff);
-//	cout<<"SYN ACCEPTED" <<endl;
+bool myconnect(int sock, struct sockaddr_in client_socket, socklen_t clilen, packettype type){
+	cout<<"In connect func."<<endl;
 
-//	if(recieved.type != SYN)
-//		error_msg("Expecting SYN packet.");
-	void * data = malloc(PCKLEN);
-	memset(data, 0, PCKLEN);
-	send_ack_packet(sock, SYN_ACK, 2, data, client_socket, clilen);
-		
+	//void * data = malloc(PCKLEN);
+	//memset(data, 0, PCKLEN);
+
+	packet mypacket(type, 1, 0, (void *)calloc(1,PCKLEN));
+	void * to_send = mypacket.serialize();
+	//cout<<"SOCKID"<<sock <<endl;
+	if(sendto(sock, to_send, sizeof(to_send), 0, (struct sockaddr *)&client_socket, clilen) < 0 ){
+		cout<<"send failed"<<endl;
+		return false;
+	}
+	cout<<"Packet successfully send"<<endl;
+	return true;
+	
 
 }
-
-void send_ack_packet(int sockID, packettype type, int sequence_num, void * data, sockaddr_in client_socket,
+//send packet WITHOUT data
+void send_ack_packet(int sockID, packettype type, int sequence_num, sockaddr_in client_socket,
  			socklen_t clilen)
 {
 	//create the packet
 	//cout<<"Sending packet of " <<*(int *)data<<" size"<<endl;
-	packet mypacket(type, sequence_num, 0, data);	
+	void * data = malloc(PCKLEN);
+	memset(data, 0, PCKLEN);
+//	cout<<"Sending SYN_ACK"<<endl;
+	packet mypacket(type, sequence_num, 0, (void*)calloc(1,PCKLEN));	
 	//serialize the packet
 	void * to_send = mypacket.serialize();
-	sendto(sockID, to_send, PCKLEN, 0,(struct sockaddr*) &client_socket, clilen);
-	//sendto
+	//sendto(sockID, to_send, sizeof(to_send), 0,(struct sockaddr*) &client_socket, clilen);
+//	if(sendto(sockID, to_send, sizeof(to_send), 0, (struct sockaddr *)&client_socket, sizeof(client_socket)) < 0 )
+		cout<<"send failed"<<endl;
 	
 
 }
@@ -214,6 +224,9 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	//serialize the packet
 	void * to_send = mypacket.serialize();
 	//sendto
-	sendto(sockID, to_send, PCKLEN, 0, (struct sockaddr*) &client_socket, clilen);
+	if(sendto(sockID, to_send, PCKLEN, 0, (struct sockaddr*) &client_socket, clilen) < 0)
+		cout<<"Send Ack failed"<<endl;
 }
+
+
 

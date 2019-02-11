@@ -12,13 +12,9 @@ packet::packet(packettype tp, int sq_num, int size_data, void * buff)
 	type = tp;
 	sequence_num = sq_num;
 	size = size_data;
-	if(buff!= NULL)
-	{
-		data = malloc(PCKLEN);
-		memcpy(data, buff, PCKLEN);
-	}
-	else
-		data = NULL;
+	
+	data = malloc(PCKLEN);
+	memcpy(data, buff, PCKLEN);
 }
 
 
@@ -65,6 +61,5 @@ void * packet::serialize()
 
 packet::~packet()
 {
-	if(data)
-		free(data);
+	free(data);
 }
