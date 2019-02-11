@@ -43,7 +43,7 @@ typedef enum{
 		SYN_ACK, //Connection Acknowledge
 		ACK,// Last bit of 3-way handshake. Acknowledge before transmitting data 
 		DATA,//Data Packet
-		DATAACK,//Data packet ack
+		DATA_ACK,//Data packet ack
 		CLOSE,//Close connection request/ack
 }packettype;
 
