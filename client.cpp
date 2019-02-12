@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
 
 	//sending SYN packet
  	
-	if (myConnection(clientSocket, serv_addr, client_addr, SYN))
+/*	if (myConnection(clientSocket, serv_addr, client_addr, SYN))
 	{
 		cout<<"Connection with Server established Successfully!\n";
 	}
@@ -63,27 +63,36 @@ int main(int argc, char * argv[])
 	{
 		cout<<"Three way handshake connection failed!\n";
 		
-	}
+	}*/
 
 	//File request
 	char * file = argv[3];
-	cout <<"Requested File: "<<file << endl;	
 
-	packet filerequest(ACK,1,sizeof(file), file);
+	int length = strlen(file)+1;
+	cout <<"Requested File: "<<file << endl;	
+	
+	void * filename = malloc(PCKLEN);
+	memset(filename, 0, PCKLEN);
+	memcpy(filename, file, length);
+
+	
+	packet filerequest(SYN,1, length, filename);
+	
+	//cout<<"File:: "<<(char*)filerequest.data<<endl;
 	void * fileptr = filerequest.serialize();
 
-	if (sendto(clientSocket, fileptr, sizeof(fileptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	if (sendto(clientSocket, fileptr, PTR_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 cout<<"sending filename failed\n";
 
 	}
-
-	cout <<"file requested from the server";
+	else
+		cout <<"file requested from the server";
 	//free(fileptr);	
 
 	//File acknowledgement
 	void * rcvptr = malloc(PTR_SIZE);
-	memset(rcvptr, 0, PTR_SIZE);
+	//memset(rcvptr, 0, PTR_SIZE);
 	socklen_t serverlen = sizeof(serv_addr);
 	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
 	{
@@ -94,7 +103,9 @@ int main(int argc, char * argv[])
 	packet received;
 	received.deserialize(rcvptr);
 
-	cout<<received.type<<" , "<<received.data<<endl;
+	//cout<<received.type<<" , "<< " SIZE " <<
+	if(received.type == SYN_ACK)
+		cout<< "The Size of the file requested is: "<<*(int *)received.data<<endl;
 	
 
 

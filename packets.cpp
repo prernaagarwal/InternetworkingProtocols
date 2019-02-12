@@ -9,16 +9,15 @@ packet::packet(){
 }
 packet::packet(packettype tp, int sq_num, int size_data, void * buff)
 {
-	type = tp;
-	sequence_num = sq_num;
-	size = size_data;
+	this->type = tp;
+	this->sequence_num = sq_num;
+	this->size = size_data;
 	
-	data = malloc(PCKLEN);
-	memcpy(data, buff, PCKLEN);
+	this->data = malloc(PCKLEN);
+	memcpy(this->data, buff, PCKLEN);
 }
-
-
-void packet::deserialize(void * buff)
+/*
+packet:: packet(void * buff)
 {
 	int off=0;
 	memcpy(&(this->type), ((packettype*)buff+off), sizeof(type));
@@ -27,7 +26,24 @@ void packet::deserialize(void * buff)
 	off += sizeof(int);
 	memcpy(&(this->size), (int*)buff+off, sizeof(int));
 	off += sizeof(int);
+	this->data = malloc(PCKLEN);
 	memcpy(&(this->data), buff+off, PCKLEN);
+
+
+}
+*/
+
+void packet::deserialize(void * buff)
+{
+	int off=0;
+	memcpy(&(this->type), (buff), sizeof(packettype));
+	off = sizeof(packettype);
+	memcpy(&(this->sequence_num), (buff+off), sizeof(int));
+	off += sizeof(int);
+	memcpy(&(this->size), (buff+off), sizeof(int));
+	off += sizeof(int);
+	this->data = malloc(PCKLEN);
+	memcpy((this->data), buff+off, PCKLEN);
 /*
 	packettype *q = (packettype*)buff;    
 	this->type = *q;       
@@ -53,7 +69,7 @@ void * packet::serialize()
 	off += sizeof(int);
 	memcpy(buff + off, &(this->size), sizeof(int));
 	off += sizeof(int);
-	memcpy(buff + off, &(this->data), PCKLEN);
+	memcpy(buff + off, (this->data), PCKLEN);
 	//std::cout<< *b;
 	return buff;
 

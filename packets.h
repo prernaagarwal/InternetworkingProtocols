@@ -47,12 +47,13 @@ typedef enum{
 		CLOSE,//Close connection request/ack
 }packettype;
 
-const size_t PTR_SIZE = sizeof(packettype)+sizeof(int)+sizeof(int)+sizeof(PCKLEN);
+const size_t PTR_SIZE = sizeof(packettype)+sizeof(int)+sizeof(int)+PCKLEN;
 
 //single packet for handshake requests, acks, and data req's and acks. 
 struct packet{
 	packet();	
 	packet(packettype tp, int sq_num, int size_data, void * buff);
+	packet(void * buff);
 	void * serialize();
 	void deserialize(void * buff);//deserialize a packet
 	~packet();
@@ -61,5 +62,6 @@ struct packet{
 	int sequence_num;
 	int size;
 	void * data;
+
 };
 
