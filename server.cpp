@@ -180,7 +180,8 @@ int main(int argc, char * argv[])
 		totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
 		
 		//after we have read, we can send the packet
-		
+		void * to_send = malloc(PTR_SIZE);
+	
 		//start our timer
 
 		//wait for recieving ACK
