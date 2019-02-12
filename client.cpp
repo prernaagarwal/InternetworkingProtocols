@@ -125,11 +125,12 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 	void * rcvptr = malloc(PTR_SIZE);
 	memset(rcvptr, 0, PTR_SIZE);
 	int  serverlen = sizeof(serv_addr);
-	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, (socklen_t*)&serverlen) < 0 )
+	if (recvfrom(clientSocket, rcvptr,  PCKLEN, 0, (struct sockaddr *)&serv_addr, (socklen_t*)&serverlen) < 0 )
 	{
 		cout<<"Receivefrom failed!\n";
 		return false;
 	}
+	cout<<"Packet Recieved."<<endl;
 
 	packet received;
 	received.deserialize(rcvptr);
@@ -138,7 +139,8 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 		cout<<"SYN_ACK not received!\n";
 		return false;
 	}
-	//free(rcvptr);
+	cout<<"SYN_ACK RECIEVED"<<endl;
+//	free(rcvptr);
 
 	return true;
 
