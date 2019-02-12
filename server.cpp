@@ -69,16 +69,16 @@ int main(int argc, char * argv[])
 
 
 	clisize = sizeof(client_addr);
-	buffer = malloc(PCKLEN);//creating buffer for maximum packet length
+	buffer = malloc(PTR_SIZE);//creating buffer for maximum packet length
 //recieve connection
 
 
 	//connect with the client prior to file request
 	//connect(sock, (struct sockaddr*) &client_addr, clisize);
 	
-	void * synbuff = malloc(PCKLEN);
+	void * synbuff = malloc(PTR_SIZE);
 
-	n = recvfrom(sock,synbuff, PCKLEN, 0, (struct sockaddr*)&client_addr, &clisize); 
+	n = recvfrom(sock,synbuff, PTR_SIZE, 0, (struct sockaddr*)&client_addr, &clisize); 
 	if(n < 0)
 		error_msg("Syn Recieve Failed.");
 
