@@ -47,7 +47,7 @@ typedef enum{
 		CLOSE,//Close connection request/ack
 }packettype;
 
-const int PTR_SIZE = sizeof(packettype)+sizeof(int)+sizeof(int)+sizeof(PCKLEN);
+const size_t PTR_SIZE = sizeof(packettype)+sizeof(int)+sizeof(int)+sizeof(PCKLEN);
 
 //single packet for handshake requests, acks, and data req's and acks. 
 struct packet{

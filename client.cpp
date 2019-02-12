@@ -9,7 +9,7 @@
 #include "packets.h"
 using namespace std;
 
-bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype type);
+bool myConnection(int clientSocket, struct sockaddr_in serv_addr, struct sockaddr_in client_addr, packettype type);
 int main(int argc, char * argv[])
 {
     	
@@ -19,7 +19,7 @@ int main(int argc, char * argv[])
 		exit(0);
 	}
 
-	struct sockaddr_in serv_addr;
+	struct sockaddr_in serv_addr, client_addr;
     
 	char buffer[256];
 	int server_port = atoi(argv[2]);
@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);	
 
 	//The inet_pton() function converts an Internet address in its standard text format into its numeric binary form. The argument af specifies the family of the address.
-	if(inet_pton(AF_INET,argv[1],&(serv_addr.sin_addr)) < 0)
+	if(inet_pton(AF_INET,argv[1],&(serv_addr.sin_addr)) == 0)
 	{
 		cout<<"Error: Invalid address \n"; 
 		exit(0);
@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
 
 	//sending SYN packet
  	
-	if (myConnection(clientSocket, serv_addr, SYN))
+	if (myConnection(clientSocket, serv_addr, client_addr, SYN))
 	{
 		cout<<"Connection with Server established Successfully!\n";
 	}
@@ -84,8 +84,8 @@ int main(int argc, char * argv[])
 	//File acknowledgement
 	void * rcvptr = malloc(PTR_SIZE);
 	memset(rcvptr, 0, PTR_SIZE);
-	int  serverlen = sizeof(serv_addr);
-	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, (socklen_t*)&serverlen) < 0 )
+	socklen_t serverlen = sizeof(serv_addr);
+	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
 	{
 		cout<<"Receivefrom failed!\n";
 		return false;
@@ -101,18 +101,19 @@ int main(int argc, char * argv[])
 
 	cout<<"File received\n";
 
-	close(clientSocket);
+	//close(clientSocket);
 
 	return 0;
 }
 
-bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype type)
+bool myConnection(int clientSocket, struct sockaddr_in serv_addr, struct sockaddr_in client_addr, packettype type)
 {
 
 	//sending SYN packet
 	packet connect(type, 0, 0, (void*)calloc(1,PCKLEN));	
+	socklen_t serverlen = sizeof(serv_addr);
 	void * sendptr = connect.serialize();
-	if (sendto(clientSocket, sendptr, sizeof(sendptr), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	if (sendto(clientSocket, sendptr, PTR_SIZE, 0, (struct sockaddr *)&serv_addr,serverlen ) < 0 ) 
 	{
 		 cout<<"sendto failed\n";
 		 return false;
@@ -124,8 +125,7 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 	//receiving SYN+ACK packet
 	void * rcvptr = malloc(PTR_SIZE);
 	memset(rcvptr, 0, PTR_SIZE);
-	int  serverlen = sizeof(serv_addr);
-	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, (socklen_t*)&serverlen) < 0 )
+	if (recvfrom(clientSocket, rcvptr, PTR_SIZE, 0, (struct sockaddr *)&client_addr, &serverlen) < 0 )
 	{
 		cout<<"Receivefrom failed!\n";
 		return false;
@@ -133,7 +133,8 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, packettype typ
 	cout<<"Packet Recieved."<<endl;
 
 	packet received;
-	received.deserialize(rcvptr);
+	//received.deserialize(rcvptr);
+	received.deserialize(sendptr);
 
 	if(received.type != SYN_ACK) {
 		cout<<"SYN_ACK not received!\n";

@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
 
 	//set the servers information
 	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	serv_addr.sin_addr.s_addr = INADDR_ANY; //htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(portnum);
 
 	//bind socket with server
@@ -72,6 +72,7 @@ int main(int argc, char * argv[])
 	buffer = malloc(PTR_SIZE);//creating buffer for maximum packet length
 //recieve connection
 
+	//length = ;
 
 	//connect with the client prior to file request
 	//connect(sock, (struct sockaddr*) &client_addr, clisize);
@@ -81,9 +82,12 @@ int main(int argc, char * argv[])
 	n = recvfrom(sock,synbuff, PTR_SIZE, 0, (struct sockaddr*)&client_addr, &clisize); 
 	if(n < 0)
 		error_msg("Syn Recieve Failed.");
-
+	
+	
 	packet recieved;
 	recieved.deserialize(synbuff);
+	cout<<"size of packet" <<sizeof(recieved)<<endl;
+	
 	
 	
 	if(recieved.type != SYN)
@@ -95,12 +99,20 @@ int main(int argc, char * argv[])
 //	send_ack_packet(sock, SYN_ACK, 1, client_addr, clisize);
 
 	
-	if(myconnect(sock, client_addr, clisize, SYN_ACK) != true)
-		error_msg("cant connect");
+//	if(myconnect(sock, client_addr, clisize, SYN_ACK) != true)
+//		error_msg("cant connect");
 	
+//	packet mypacket(SYN_ACK, 1, 0, (void *)calloc(1,PCKLEN));
+//	void * to_send = mypacket.serialize();
+	//cout<<" size: "<<sizeof(to_send)<<endl;
+	//cout<<"SOCKID"<<sock <<endl;
 	
-
-	
+	if(sendto(sock, synbuff, PTR_SIZE, 0, (struct sockaddr *)&client_addr, clisize ) < 0 )
+		cout<<"could not send synack"<<endl;
+/*	
+	void * mydata = malloc(PCKLEN);
+	memset(mydata, 0, PCKLEN);	
+	send_data_packet(sock, SYN_ACK, 2, mydata, PCKLEN, client_addr, clisize);	*/
 		//will be the file request
 	n = recvfrom(sock, buffer, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);
 	if(n < 0)
@@ -168,7 +180,7 @@ int main(int argc, char * argv[])
 	}//end of while(1) for sending and recv packets. 
 	
 
-	close(sock);
+//	close(sock);
 
 	return 0;
 }
