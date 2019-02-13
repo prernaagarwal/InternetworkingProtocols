@@ -9,6 +9,7 @@
 #include <string.h>
 #include <iostream>
 #include "packets.h"
+#include <math.h>
 using namespace std;
 
 //prototypes
@@ -159,9 +160,7 @@ int main(int argc, char * argv[])
 	//memcpy(data, &filesize, sizeof(int));//copies the filesize into the pointer to be sent as data	
 	cout<<"FILE SIZE :::: "<<*(int *)data<<endl;
 	send_data_packet(sock, SYN_ACK, 2, data, PCKLEN, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
-		cout<<"SYN_ACK failed"<<endl;
-	
-		//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
+	//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
 
 			
 	//recv the ack from client before transmitting file. COMMENTED OUT THE RECVFROM AND DESERIALIZE FOR TIME BEING
@@ -169,21 +168,34 @@ int main(int argc, char * argv[])
 //	recvfrom(sock, ack_to_begin, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);//recieve ack packet.
 	packet beginpacket;
 //	beginpacket.deserialize(ack_to_begin);
-
+	/////////////////////////////////////
 	
+	bool flagTransfer = false;	
+	n = recvfrom(sock, ack_to_begin, PTR_SIZE, 0, (struct sockaddr*) &client_addr, &clisize);
+	if(n < 0)
+		error_msg("ack to begin file transfer failed");
+	else
+		cout<<"Recieved"<<endl;
+	beginpacket.deserialize(ack_to_begin);
+	if (beginpacket.type == ACK)
+		cout<<"ACK to transfer file received\n";
 	
+	flagTransfer = true;	
+	cout<<"flagTransfer: "<<flagTransfer<<endl;
+	////////////////////////////////////////	
+	//
 	int totalbytes =0;//total bytes we have sent to client. will let us know when to close the connection.
-	int total_packets_to_send = filesize /1024;//the number of packets we will be sending.
+	//float total_packets_to_send = ceil(filesize /1024.0);//the number of packets we will be sending.
 	cout<<"total packets to be sent" <<total_packets_to_send<<endl;//I just wanted to see how many.
 			
 	//to loop while we transfer the files. 
 	while(1){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
-		cout<<"Hi prerne. perhaps you're  segfaulting here: "<<endl<<endl;
-		totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
+		//cout<<"Hi prerne. perhaps you're  segfaulting here: "<<endl<<endl;
+		//totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
 		
 		//after we have read, we can send the packet
-		void * to_send = malloc(PTR_SIZE);
+		//void * to_send = malloc(PTR_SIZE);
 	
 		//start our timer
 

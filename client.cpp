@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "packets.h"
+#include <math.h>
+
 using namespace std;
 
 bool myConnection(int clientSocket, struct sockaddr_in serv_addr, struct sockaddr_in client_addr, packettype type);
@@ -89,7 +91,7 @@ int main(int argc, char * argv[])
 	}
 	else
 		cout <<"file requested from the server\n";
-	//free(fileptr);	
+	free(fileptr);	
 
 	//File acknowledgement
 	void * rcvptr = malloc(PTR_SIZE);
@@ -109,8 +111,26 @@ int main(int argc, char * argv[])
 		cout<< "The Size of the file requested is: "<<*(int *)received.data<<endl;
 	
 
+	//////////////
+	// Sending file ack to the server //
+	void * nodata = malloc(PCKLEN);
+	memset(nodata, 0, PCKLEN);
+	packet fileAck(ACK,2, 0, nodata);
+	
+	//cout<<"File:: "<<(char*)filerequest.data<<endl;
+	void * fileSizeAck = fileAck.serialize();
 
+	if (sendto(clientSocket, fileSizeAck, PTR_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+	{
+		 cout<<"sending file size ack failed\n";
 
+	}
+	else
+		cout <<"file size ack sent to the server\n";
+	
+	cout<<"Ready to receive the file"<<endl;
+
+	////////////////////////////////////////////
 	//cout<<"File received\n";
 
 	//close(clientSocket);
