@@ -179,6 +179,7 @@ int main(int argc, char * argv[])
 	//to loop while we transfer the files. 
 	while(1){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
+		cout<<"Hi prerne. perhaps you're  segfaulting here: "<<endl<<endl;
 		totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
 		
 		//after we have read, we can send the packet
