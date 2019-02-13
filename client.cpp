@@ -70,13 +70,14 @@ int main(int argc, char * argv[])
 
 	int length = strlen(file)+1;
 	cout <<"Requested File: "<<file << endl;	
-	
-	void * filename = malloc(PCKLEN);
-	memset(filename, 0, PCKLEN);
-	memcpy(filename, file, length);
+
+	//It works without void pointer. If errors, use this void pointer instead of char *	
+	//void * filename = malloc(PCKLEN);
+	//memset(filename, 0, PCKLEN);
+	//memcpy(filename, file, length);
 
 	
-	packet filerequest(SYN,1, length, filename);
+	packet filerequest(SYN,1, length, file);
 	
 	//cout<<"File:: "<<(char*)filerequest.data<<endl;
 	void * fileptr = filerequest.serialize();
@@ -87,7 +88,7 @@ int main(int argc, char * argv[])
 
 	}
 	else
-		cout <<"file requested from the server";
+		cout <<"file requested from the server\n";
 	//free(fileptr);	
 
 	//File acknowledgement
@@ -110,7 +111,7 @@ int main(int argc, char * argv[])
 
 
 
-	cout<<"File received\n";
+	//cout<<"File received\n";
 
 	//close(clientSocket);
 

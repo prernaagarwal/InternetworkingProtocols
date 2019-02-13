@@ -159,7 +159,9 @@ int main(int argc, char * argv[])
 	//memcpy(data, &filesize, sizeof(int));//copies the filesize into the pointer to be sent as data	
 	cout<<"FILE SIZE :::: "<<*(int *)data<<endl;
 	send_data_packet(sock, SYN_ACK, 2, data, PCKLEN, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
-	//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
+		cout<<"SYN_ACK failed"<<endl;
+	
+		//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
 
 			
 	//recv the ack from client before transmitting file. COMMENTED OUT THE RECVFROM AND DESERIALIZE FOR TIME BEING
