@@ -185,7 +185,7 @@ int main(int argc, char * argv[])
 	////////////////////////////////////////	
 	//
 	int totalbytes =0;//total bytes we have sent to client. will let us know when to close the connection.
-	//float total_packets_to_send = ceil(filesize /1024.0);//the number of packets we will be sending.
+	float total_packets_to_send = ceil(filesize /1024.0);//the number of packets we will be sending.
 	cout<<"total packets to be sent" <<total_packets_to_send<<endl;//I just wanted to see how many.
 			
 	//to loop while we transfer the files. 
