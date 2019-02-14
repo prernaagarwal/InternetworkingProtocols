@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 {
 	int sock, newsock, portnum, ret; //clisize, ret;//file descriptors, port number, client address size,
 	//and variable to caputer return values
-	void* buffer;
+	void * buffer;
 	struct sockaddr_in serv_addr;//server address
 	struct sockaddr_in client_addr;//client address
 	socklen_t clisize;
@@ -162,7 +162,7 @@ int main(int argc, char * argv[])
 	//cout<<"FILE SIZE :::: "<<*(int *)data<<endl;
 	send_data_packet(sock, SYN_ACK, 2, data, PCKLEN, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
 	//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
-
+	free(data);
 			
 	//recv the ack from client before transmitting file. COMMENTED OUT THE RECVFROM AND DESERIALIZE FOR TIME BEING
 	void * ack_to_begin = malloc(PTR_SIZE);
@@ -178,6 +178,8 @@ int main(int argc, char * argv[])
 	else
 		cout<<"Recieved"<<endl;
 	beginpacket.deserialize(ack_to_begin);
+
+	free(ack_to_begin);
 	if (beginpacket.type == ACK)
 		cout<<"ACK to transfer file received\n";
 	
@@ -197,8 +199,6 @@ int main(int argc, char * argv[])
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
 		
-		//?????????????????? data here is an int!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! I misinterpreted what the fread args were
-		//totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
 
 		//read chunks of PCKLEN(1024) from the file into readData where size of each object to be read (byte) is 1
 		totalbytes = fread(readData, 1, PCKLEN, file);
@@ -219,7 +219,7 @@ int main(int argc, char * argv[])
 		//////start our timer
 
 		//wait for recieving ACK
-			void * receiveDataAck = malloc(PCKLEN);
+			void * receiveDataAck = malloc(PTR_SIZE);
 			packet received;
 			n = recvfrom(sock, receiveDataAck, PTR_SIZE, 0, (struct sockaddr*) &client_addr, &clisize);
 			if(n < 0)
@@ -228,6 +228,7 @@ int main(int argc, char * argv[])
 				cout<<"Recieved"<<endl;
 			received.deserialize(receiveDataAck);
 			sequence_we_got= received.sequence_num;//needed for while condition as received only exists in this scope.
+			free(receiveDataAck);
 		//we need to make sure the sequence numbers match, otherwise we resend. :
 			if (received.type == DATA_ACK && sequence_we_got == seq_num)
 			{
@@ -251,7 +252,7 @@ int main(int argc, char * argv[])
 	cout<<"sending close request"<<endl;
 	
 	send_data_packet(sock, CLOSE, 0, buffer, PCKLEN, client_addr, clisize);
-	void * close= malloc(PCKLEN);
+	void * close= malloc(PTR_SIZE);
 
 	n = recvfrom(sock, close, PTR_SIZE, 0, (struct sockaddr*)&client_addr, &clisize);
 	if(n <0)
@@ -267,9 +268,15 @@ int main(int argc, char * argv[])
 	else{
 		cout<<"NOT A CLOSE PACKET"<<endl;	
 	}
+	free(readData);
+	free(buffer);
+	free(close);
 //	fclose(file);
+//
+//	
+//	// comment this free when files is closed
+	free(file);
 //	close(sock);
-
 	return 0;
 }
 
@@ -289,6 +296,8 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	//sendto
 	if(sendto(sockID, to_send, PTR_SIZE, 0, (struct sockaddr*) &client_socket, clilen) < 0)
 		cout<<"Send "<<type<<" failed"<<endl;
+	free(to_send);
+	free(buffer);
 }
 
 

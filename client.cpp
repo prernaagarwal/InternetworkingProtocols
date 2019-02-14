@@ -47,15 +47,6 @@ int main(int argc, char * argv[])
 		exit(0);
 	}
 	
-/* 	 ORIGINAL CODE TO SEND A FILENAME
-	if (sendto(clientSocket, file, sizeof(file), 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
-	{
-		 printf( "sendto failed" );
-	}
-
-	cout <<"message sent: "<< file ;
-*/
-
 	//sending SYN packet
  	
 /*	if (myConnection(clientSocket, serv_addr, client_addr, SYN))
@@ -93,6 +84,7 @@ int main(int argc, char * argv[])
 	else
 		cout <<"file requested from the server\n";
 	free(fileptr);	
+	free(file);
 
 	//File acknowledgement
 	void * rcvptr = malloc(PTR_SIZE);
@@ -105,13 +97,14 @@ int main(int argc, char * argv[])
 
 	packet received;
 	received.deserialize(rcvptr);
+	free(rcvptr);
 
 	//cout<<received.type<<" , "<< " SIZE " <<
 	if(received.type == SYN_ACK)
 		cout<< "The Size of the file requested is: "<<*(int *)received.data<<endl;
 	int totaltoread = *(int*)received.data;	
 
-	//////////////
+
 	// Sending file ack to the server //
 	void * nodata = malloc(PCKLEN);
 	memset(nodata, 0, PCKLEN);
@@ -119,7 +112,7 @@ int main(int argc, char * argv[])
 	
 	//cout<<"File:: "<<(char*)filerequest.data<<endl;
 	void * fileSizeAck = fileAck.serialize();
-
+	
 	if (sendto(clientSocket, fileSizeAck, PTR_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 	{
 		 cout<<"sending file size ack failed\n";
@@ -127,6 +120,9 @@ int main(int argc, char * argv[])
 	}
 	else
 		cout <<"file size ack sent to the server\n";
+	
+	free(nodata);
+	free(fileSizeAck);	
 	
 	cout<<"Ready to receive the file"<<endl;
 
@@ -159,23 +155,26 @@ int main(int argc, char * argv[])
 			totalWritten+=receiveData.size;
 		}//else if we got the same packet twice, dont rewrite but resent the packet.
 
-		packet confirmData(DATA_ACK,seq_num, 0, malloc(PCKLEN));
+		void * nodata = malloc(PCKLEN);
+		memset(nodata, 0, PCKLEN);
+		
+		packet confirmData(DATA_ACK,seq_num, 0, nodata);
 		cout<<"Received "<<seq_num<<endl;	
 		//cout<<"File:: "<<(char*)filerequest.data<<endl;
 		void * confirmed = confirmData.serialize();
 
 		if (sendto(clientSocket, confirmed, PTR_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
 		{
-			 cout<<"sending filename failed\n";
+			 cout<<"sending data_ack failed\n";
 
 		}
+		free(nodata);
 		free(confirmed);	
 		if(totalWritten == totaltoread)
 			break;
 	}
 //	close(fp);
 //	fclose(fp);
-	
 	//RECEIVE CLOSE REQUEST
 	void * closeptr = malloc(PCKLEN);
 	cout<<"waiting to receive close"<<endl;
@@ -198,17 +197,13 @@ int main(int argc, char * argv[])
 	}
 	else
 		cout<<"NOT A CLOSE PACKET"<<endl;
-
+ 	free(rcv);
+	free(closeptr);
 	
-
-	////////////////////////////////////////////
-	//cout<<"File received\n";
-
-	//close(clientSocket);
-
 	return 0;
 }
 
+/*
 bool myConnection(int clientSocket, struct sockaddr_in serv_addr, struct sockaddr_in client_addr, packettype type)
 {
 
@@ -223,7 +218,7 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, struct sockadd
 	}
 
 	cout <<"SYN packet sent\n";
-	//delete(sendptr);	
+	free(sendptr);	
 
 	//receiving SYN+ACK packet
 	void * rcvptr = malloc(PTR_SIZE);
@@ -236,16 +231,17 @@ bool myConnection(int clientSocket, struct sockaddr_in serv_addr, struct sockadd
 	cout<<"Packet Recieved."<<endl;
 
 	packet received;
-	//received.deserialize(rcvptr);
-	received.deserialize(sendptr);
+	received.deserialize(rcvptr);
+	//received.deserialize(sendptr);
 
 	if(received.type != SYN_ACK) {
 		cout<<"SYN_ACK not received!\n";
 		return false;
 	}
 	cout<<"SYN_ACK RECIEVED"<<endl;
-//	free(rcvptr);
+	free(rcvptr);
 
 	return true;
 
 }
+*/
