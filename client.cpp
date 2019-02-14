@@ -100,7 +100,6 @@ int main(int argc, char * argv[])
 	if (recvfrom(clientSocket, rcvptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
 	{
 		cout<<"Receivefrom failed!\n";
-		return false;
 	}
 
 	packet received;
@@ -129,6 +128,39 @@ int main(int argc, char * argv[])
 		cout <<"file size ack sent to the server\n";
 	
 	cout<<"Ready to receive the file"<<endl;
+
+	int seq_num = 0;
+	while(1)
+	{
+
+		void * rcv = malloc(PTR_SIZE);
+		//memset(rcvptr, 0, PTR_SIZE);
+		if (recvfrom(clientSocket, rcv,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
+		{
+			cout<<"Receivefrom failed!\n";
+
+		}
+
+		packet receiveData;
+		receiveData.deserialize(rcv);
+		//cout<<"received"<<endl;
+		seq_num = receiveData.sequence_num;
+
+		packet confirmData(DATA_ACK,seq_num, 0, malloc(PCKLEN));
+		
+		//cout<<"File:: "<<(char*)filerequest.data<<endl;
+		void * confirmed = confirmData.serialize();
+
+		if (sendto(clientSocket, confirmed, PTR_SIZE, 0, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0 ) 
+		{
+			 cout<<"sending filename failed\n";
+
+		}
+		free(confirmed);	
+	}
+
+
+
 
 	////////////////////////////////////////////
 	//cout<<"File received\n";

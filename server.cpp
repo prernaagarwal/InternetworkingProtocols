@@ -234,7 +234,6 @@ int main(int argc, char * argv[])
 			cout<<"DATA_ACK received\n";
 			++seq_num;
 		}
-
 		//when we recieve ACK, cancel the timer. 
 
 		//check that the sequence numbers match
