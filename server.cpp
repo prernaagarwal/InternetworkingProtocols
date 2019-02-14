@@ -146,6 +146,8 @@ int main(int argc, char * argv[])
 		
 		//need to send packet with file size
 	FILE * file = fopen(filerequested, "r");
+	if(file == NULL)
+		cout<<"File Open is NULL"<<endl;	
 
 
 		//Gets the size of the file we want
@@ -158,7 +160,7 @@ int main(int argc, char * argv[])
 	//create pointer to point to the file size so that we may pass this back to the client in our SYN_ACK
 	void * data = &filesize; //malloc(PCKLEN);
 	//memcpy(data, &filesize, sizeof(int));//copies the filesize into the pointer to be sent as data	
-	cout<<"FILE SIZE :::: "<<*(int *)data<<endl;
+	//cout<<"FILE SIZE :::: "<<*(int *)data<<endl;
 	send_data_packet(sock, SYN_ACK, 2, data, PCKLEN, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
 	//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
 
@@ -200,10 +202,12 @@ int main(int argc, char * argv[])
 
 		//read chunks of PCKLEN(1024) from the file into readData where size of each object to be read (byte) is 1
 		totalbytes = fread(readData, 1, PCKLEN, file);
-		cout<<"totalbytes: "<<totalbytes<<endl;
+		//cout<<"totalbytes: "<<totalbytes<<endl;
 		if (totalbytes <= 0 )
 		{
 			cout<<"Read the whole file"<<endl;
+//			if(feof(file))
+//				fclose(file);
 			break;
 		}
 		
@@ -211,7 +215,7 @@ int main(int argc, char * argv[])
 		//after we have read, we can send the packet
 		send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
 		
-		cout<<"Packets read and sent: "<<i<<endl;
+	//	cout<<"Packets read and sent: "<<i<<endl;
 		++i;
 		
 		
@@ -229,7 +233,9 @@ int main(int argc, char * argv[])
 		else
 			cout<<"Recieved"<<endl;
 		received.deserialize(receiveDataAck);
-		if (received.type == DATA_ACK)
+
+		//we need to make sure the sequence numbers match, otherwise we resend. :
+		if (received.type == DATA_ACK && received.sequence_num == seq_num)
 		{
 			cout<<"DATA_ACK received\n";
 			++seq_num;
@@ -243,7 +249,7 @@ int main(int argc, char * argv[])
 	}
 	//end of while(1) for sending and recv packets. 
 	
-	fclose(file);
+//	fclose(file);
 //	close(sock);
 
 	return 0;
@@ -259,10 +265,11 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 {
 	//create the packet
 	packet mypacket(type, sequence_num, size, buffer);//pass info into constructor.
+	cout<<"SIZE OF DATA = "<<mypacket.size<<endl;
 	//serialize the packet
 	void * to_send = mypacket.serialize();
 	//sendto
-	if(sendto(sockID, to_send, PCKLEN, 0, (struct sockaddr*) &client_socket, clilen) < 0)
+	if(sendto(sockID, to_send, PTR_SIZE, 0, (struct sockaddr*) &client_socket, clilen) < 0)
 		cout<<"Send "<<type<<" failed"<<endl;
 }
 

@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "packets.h"
 #include <math.h>
+#include <fcntl.h>
 
 using namespace std;
 
@@ -129,15 +130,15 @@ int main(int argc, char * argv[])
 	
 	cout<<"Ready to receive the file"<<endl;
 
-	FILE * fp;
-	fp = fopen("test1.jpg" , "w" );
-	
+	//FILE * fp;
+	//fp = fopen("test1.jpg" , "wb" );
+	int fp = open("test1.jpg", O_CREAT | O_WRONLY | O_EXCL,S_IRWXU);	
 
+	void * rcv = malloc(PTR_SIZE);
 	int seq_num = 0;
 	while(1)
 	{
 
-		void * rcv = malloc(PTR_SIZE);
 		//memset(rcvptr, 0, PTR_SIZE);
 		if (recvfrom(clientSocket, rcv,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
 		{
@@ -149,7 +150,8 @@ int main(int argc, char * argv[])
 		//cout<<"received"<<endl;
 		seq_num = receiveData.sequence_num;
 
-		int bytesWritten = fwrite(receiveData.data, 1 , PCKLEN , fp);
+		int bytesWritten = write(fp, receiveData.data, receiveData.size);//fwrite(receiveData.data, r, PCKLEN , fp);
+		cout<< "Bytes Written = "<<receiveData.size<<endl;
 
 		packet confirmData(DATA_ACK,seq_num, 0, malloc(PCKLEN));
 		cout<<"Received "<<seq_num<<endl;	
@@ -164,7 +166,7 @@ int main(int argc, char * argv[])
 		free(confirmed);	
 	}
 
-	fclose(fp);
+//	fclose(fp);
 
 
 
