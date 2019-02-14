@@ -84,7 +84,7 @@ int main(int argc, char * argv[])
 	else
 		cout <<"file requested from the server\n";
 	free(fileptr);	
-	free(file);
+	//free(file);
 
 	//File acknowledgement
 	void * rcvptr = malloc(PTR_SIZE);
@@ -176,7 +176,7 @@ int main(int argc, char * argv[])
 //	close(fp);
 //	fclose(fp);
 	//RECEIVE CLOSE REQUEST
-	void * closeptr = malloc(PCKLEN);
+	void * closeptr = malloc(PTR_SIZE);
 	cout<<"waiting to receive close"<<endl;
 	if (recvfrom(clientSocket, closeptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
 	{

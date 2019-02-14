@@ -162,7 +162,7 @@ int main(int argc, char * argv[])
 	//cout<<"FILE SIZE :::: "<<*(int *)data<<endl;
 	send_data_packet(sock, SYN_ACK, 2, data, PCKLEN, client_addr, clisize);//sequence number of 2 since we've already recv'd reguest
 	//cout<<"File Ack sent"<<endl;//confirmation we sent the ACK.
-	free(data);
+	//free(data);
 			
 	//recv the ack from client before transmitting file. COMMENTED OUT THE RECVFROM AND DESERIALIZE FOR TIME BEING
 	void * ack_to_begin = malloc(PTR_SIZE);
@@ -297,7 +297,7 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	if(sendto(sockID, to_send, PTR_SIZE, 0, (struct sockaddr*) &client_socket, clilen) < 0)
 		cout<<"Send "<<type<<" failed"<<endl;
 	free(to_send);
-	free(buffer);
+//	free(buffer);
 }
 
 
