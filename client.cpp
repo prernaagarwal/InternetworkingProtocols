@@ -129,6 +129,10 @@ int main(int argc, char * argv[])
 	
 	cout<<"Ready to receive the file"<<endl;
 
+	FILE * fp;
+	fp = fopen("test1.jpg" , "w" );
+	
+
 	int seq_num = 0;
 	while(1)
 	{
@@ -140,14 +144,15 @@ int main(int argc, char * argv[])
 			cout<<"Receivefrom failed!\n";
 
 		}
-
 		packet receiveData;
 		receiveData.deserialize(rcv);
 		//cout<<"received"<<endl;
 		seq_num = receiveData.sequence_num;
 
+		int bytesWritten = fwrite(receiveData.data, 1 , PCKLEN , fp);
+
 		packet confirmData(DATA_ACK,seq_num, 0, malloc(PCKLEN));
-		
+		cout<<"Received "<<seq_num<<endl;	
 		//cout<<"File:: "<<(char*)filerequest.data<<endl;
 		void * confirmed = confirmData.serialize();
 
@@ -159,6 +164,7 @@ int main(int argc, char * argv[])
 		free(confirmed);	
 	}
 
+	fclose(fp);
 
 
 

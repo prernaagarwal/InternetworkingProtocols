@@ -243,7 +243,7 @@ int main(int argc, char * argv[])
 	}
 	//end of while(1) for sending and recv packets. 
 	
-
+	fclose(file);
 //	close(sock);
 
 	return 0;
