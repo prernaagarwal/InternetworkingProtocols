@@ -182,20 +182,37 @@ int main(int argc, char * argv[])
 	
 	flagTransfer = true;	
 	cout<<"flagTransfer: "<<flagTransfer<<endl;
-	////////////////////////////////////////	
-	//
+	
 	int totalbytes =0;//total bytes we have sent to client. will let us know when to close the connection.
 	float total_packets_to_send = ceil(filesize /1024.0);//the number of packets we will be sending.
+	//float total_packets_to_send = filesize /1024;//the number of packets we will be sending.
 	cout<<"total packets to be sent" <<total_packets_to_send<<endl;//I just wanted to see how many.
 			
 	//to loop while we transfer the files. 
-	while(1){
+	void * readData = malloc(PCKLEN);
+	int seq_num = 4; 
+	int i =1;
+	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
-		//cout<<"Hi prerne. perhaps you're  segfaulting here: "<<endl<<endl;
+		
+		//?????????????????? data here is an int!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		//totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
+
+		//read chunks of PCKLEN(1024) from the file into readData where size of each object to be read (byte) is 1
+		totalbytes = fread(readData, 1, PCKLEN, file);
+		cout<<"totalbytes: "<<totalbytes<<endl;
+		if (totalbytes <= 0 )
+		{
+			break;
+		}
+		cout<<"Packets read: "<<i<<endl;
+		++i;
 		
 		//after we have read, we can send the packet
+		
+		//packet sendData(DATA, seq_num, PCKLEN, readData;
 		//void * to_send = malloc(PTR_SIZE);
+
 	
 		//start our timer
 
@@ -207,7 +224,8 @@ int main(int argc, char * argv[])
 
 		//if they do not, resend our packet, if they do, start over. 
 	
-	}//end of while(1) for sending and recv packets. 
+	}
+	//end of while(1) for sending and recv packets. 
 	
 
 //	close(sock);
