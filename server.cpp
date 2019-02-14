@@ -164,7 +164,7 @@ int main(int argc, char * argv[])
 
 			
 	//recv the ack from client before transmitting file. COMMENTED OUT THE RECVFROM AND DESERIALIZE FOR TIME BEING
-	void * ack_to_begin = malloc(PCKLEN);
+	void * ack_to_begin = malloc(PTR_SIZE);
 //	recvfrom(sock, ack_to_begin, PCKLEN, 0, (struct sockaddr*) &client_addr, &clisize);//recieve ack packet.
 	packet beginpacket;
 //	beginpacket.deserialize(ack_to_begin);
@@ -203,21 +203,38 @@ int main(int argc, char * argv[])
 		cout<<"totalbytes: "<<totalbytes<<endl;
 		if (totalbytes <= 0 )
 		{
+			cout<<"Read the whole file"<<endl;
 			break;
 		}
-		cout<<"Packets read: "<<i<<endl;
+		
+
+		//after we have read, we can send the packet
+		send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
+		
+		cout<<"Packets read and sent: "<<i<<endl;
 		++i;
 		
-		//after we have read, we can send the packet
 		
-		//packet sendData(DATA, seq_num, PCKLEN, readData;
-		//void * to_send = malloc(PTR_SIZE);
 
 	
 		//start our timer
 
 		//wait for recieving ACK
-		
+			
+		void * receiveDataAck = malloc(PCKLEN);
+		packet received;
+		n = recvfrom(sock, receiveDataAck, PTR_SIZE, 0, (struct sockaddr*) &client_addr, &clisize);
+		if(n < 0)
+			error_msg("ack to begin file transfer failed");
+		else
+			cout<<"Recieved"<<endl;
+		received.deserialize(receiveDataAck);
+		if (received.type == DATA_ACK)
+		{
+			cout<<"DATA_ACK received\n";
+			++seq_num;
+		}
+
 		//when we recieve ACK, cancel the timer. 
 
 		//check that the sequence numbers match
@@ -247,7 +264,7 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	void * to_send = mypacket.serialize();
 	//sendto
 	if(sendto(sockID, to_send, PCKLEN, 0, (struct sockaddr*) &client_socket, clilen) < 0)
-		cout<<"Send Ack failed"<<endl;
+		cout<<"Send "<<type<<" failed"<<endl;
 }
 
 
