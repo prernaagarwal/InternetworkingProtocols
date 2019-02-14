@@ -29,7 +29,6 @@ int main(int argc, char * argv[])
 	struct sockaddr_in client_addr;//client address
 	socklen_t clisize;
 	int n=0;
-	int seq =0;
 	char *filename;
 	int filesize = 0;
 	
@@ -193,11 +192,12 @@ int main(int argc, char * argv[])
 	//to loop while we transfer the files. 
 	void * readData = malloc(PCKLEN);
 	int seq_num = 4; 
-	int i =1;
+	int i =0;
+	int sequence_we_got = 0;
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
 		
-		//?????????????????? data here is an int!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//?????????????????? data here is an int!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! I misinterpreted what the fread args were
 		//totalbytes = fread(data, PCKLEN,total_packets_to_send, file);
 
 		//read chunks of PCKLEN(1024) from the file into readData where size of each object to be read (byte) is 1
@@ -206,49 +206,67 @@ int main(int argc, char * argv[])
 		if (totalbytes <= 0 )
 		{
 			cout<<"Read the whole file"<<endl;
-//			if(feof(file))
-//				fclose(file);
 			break;
 		}
 		
 
 		//after we have read, we can send the packet
-		send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
+		do{
+			send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
 		
 	//	cout<<"Packets read and sent: "<<i<<endl;
-		++i;
-		
-		
-
 	
-		//start our timer
+		//////start our timer
 
 		//wait for recieving ACK
-			
-		void * receiveDataAck = malloc(PCKLEN);
-		packet received;
-		n = recvfrom(sock, receiveDataAck, PTR_SIZE, 0, (struct sockaddr*) &client_addr, &clisize);
-		if(n < 0)
-			error_msg("ack to begin file transfer failed");
-		else
-			cout<<"Recieved"<<endl;
-		received.deserialize(receiveDataAck);
-
+			void * receiveDataAck = malloc(PCKLEN);
+			packet received;
+			n = recvfrom(sock, receiveDataAck, PTR_SIZE, 0, (struct sockaddr*) &client_addr, &clisize);
+			if(n < 0)
+				error_msg("ack to begin file transfer failed");
+			else
+				cout<<"Recieved"<<endl;
+			received.deserialize(receiveDataAck);
+			sequence_we_got= received.sequence_num;//needed for while condition as received only exists in this scope.
 		//we need to make sure the sequence numbers match, otherwise we resend. :
-		if (received.type == DATA_ACK && received.sequence_num == seq_num)
-		{
-			cout<<"DATA_ACK received\n";
-			++seq_num;
-		}
-		//when we recieve ACK, cancel the timer. 
-
-		//check that the sequence numbers match
-
-		//if they do not, resend our packet, if they do, start over. 
-	
+			if (received.type == DATA_ACK && sequence_we_got == seq_num)
+			{
+				cout<<"DATA_ACK received\n";
+				++seq_num;
+				break;//THIS IS NECESSARY OR WE SEND FOREVER
+			}
+			
+		}while(sequence_we_got != seq_num);//to continually resend the packet until we receive the ack we are expecting.
+		//////will take care of out of order acks sent, or duplicate acks.
+		//////when we recieve ACK, cancel the timer. 
+		cout<<"i  "<<i<<endl;
+		++i;//we can increment i here because we got past the dowhile.
 	}
 	//end of while(1) for sending and recv packets. 
+//	NEEDED THIS FINAL RECEIVE FOR THE LAST ACK	
+
+//	void * close =malloc(PCKLEN);
+//	memset(close, 0, PCKLEN);
+	//sending the close request
+	cout<<"sending close request"<<endl;
 	
+	send_data_packet(sock, CLOSE, 0, buffer, PCKLEN, client_addr, clisize);
+	void * close= malloc(PCKLEN);
+
+	n = recvfrom(sock, close, PTR_SIZE, 0, (struct sockaddr*)&client_addr, &clisize);
+	if(n <0)
+		error_msg("Failed to receive close ack");
+	cout<<"received close packet in server"<<endl;
+	packet closepack;	
+	closepack.deserialize(close);
+	
+	if(closepack.type == CLOSE){
+		cout<<"close request accepted from client"<<endl;
+		shutdown(sock,0);
+	}
+	else{
+		cout<<"NOT A CLOSE PACKET"<<endl;	
+	}
 //	fclose(file);
 //	close(sock);
 
@@ -265,7 +283,7 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 {
 	//create the packet
 	packet mypacket(type, sequence_num, size, buffer);//pass info into constructor.
-	cout<<"SIZE OF DATA = "<<mypacket.size<<endl;
+	//cout<<"SIZE OF DATA = "<<mypacket.size<<endl;
 	//serialize the packet
 	void * to_send = mypacket.serialize();
 	//sendto

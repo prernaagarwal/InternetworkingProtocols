@@ -109,7 +109,7 @@ int main(int argc, char * argv[])
 	//cout<<received.type<<" , "<< " SIZE " <<
 	if(received.type == SYN_ACK)
 		cout<< "The Size of the file requested is: "<<*(int *)received.data<<endl;
-	
+	int totaltoread = *(int*)received.data;	
 
 	//////////////
 	// Sending file ack to the server //
@@ -135,7 +135,9 @@ int main(int argc, char * argv[])
 	int fp = open("test1.jpg", O_CREAT | O_WRONLY | O_EXCL,S_IRWXU);	
 
 	void * rcv = malloc(PTR_SIZE);
-	int seq_num = 0;
+	int seq_num = 3;//3 because we are starting with 4 serverside. 3 for handshake.
+	int bytesWritten=0;
+	int totalWritten =0;
 	while(1)
 	{
 
@@ -148,10 +150,14 @@ int main(int argc, char * argv[])
 		packet receiveData;
 		receiveData.deserialize(rcv);
 		//cout<<"received"<<endl;
-		seq_num = receiveData.sequence_num;
-
-		int bytesWritten = write(fp, receiveData.data, receiveData.size);//fwrite(receiveData.data, r, PCKLEN , fp);
-		cout<< "Bytes Written = "<<receiveData.size<<endl;
+		if(receiveData.sequence_num == seq_num +1)//if we are the NEXT packet, then we can write.
+		{
+			seq_num = receiveData.sequence_num;
+		
+			bytesWritten = write(fp, receiveData.data, receiveData.size);//fwrite(receiveData.data, r, PCKLEN , fp);
+			cout<< "Bytes Written = "<<receiveData.size<<endl;
+			totalWritten+=receiveData.size;
+		}//else if we got the same packet twice, dont rewrite but resent the packet.
 
 		packet confirmData(DATA_ACK,seq_num, 0, malloc(PCKLEN));
 		cout<<"Received "<<seq_num<<endl;	
@@ -164,11 +170,36 @@ int main(int argc, char * argv[])
 
 		}
 		free(confirmed);	
+		if(totalWritten == totaltoread)
+			break;
 	}
-
+//	close(fp);
 //	fclose(fp);
+	
+	//RECEIVE CLOSE REQUEST
+	void * closeptr = malloc(PCKLEN);
+	cout<<"waiting to receive close"<<endl;
+	if (recvfrom(clientSocket, closeptr,  PTR_SIZE, 0, (struct sockaddr *)&serv_addr, &serverlen) < 0 )
+	{
+		cout<<"Close Receive failed."<<endl;
+	}
+	packet close;
+	close.deserialize(closeptr);
+	if(close.type == CLOSE)
+	{
+		closeptr = close.serialize();
+		cout<<"sending closing request ack"<<endl;
+		if(sendto(clientSocket, closeptr, PTR_SIZE, 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr))<0)
+		{
+			cout<<"Sending Close Ack Failed"<<endl;
+		}
+	
+		shutdown(clientSocket,0);
+	}
+	else
+		cout<<"NOT A CLOSE PACKET"<<endl;
 
-
+	
 
 	////////////////////////////////////////////
 	//cout<<"File received\n";
