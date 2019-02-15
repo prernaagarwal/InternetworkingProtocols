@@ -25,7 +25,7 @@
 #endif
 
 #ifndef RECVFROM_AVGDELAY_MS
-#define RECVFROM_AVGDELAY_MS 75
+#define RECVFROM_AVGDELAY_MS 400
 #endif
 
 //#define _DEBUG_SENDTO_

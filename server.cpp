@@ -12,13 +12,17 @@
 #include <math.h>
 #include <signal.h>
 #include <time.h>
+#include<pthread.h>
 using namespace std;
 
 //prototypes
-void timer_thread(void * arg);
+void timer_thread(union sigval arg);
 void error_msg(const char * message);
 void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
 
+//pthread things
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 //NO LONGER BEING USED
 //bool myconnect(int sock, struct sockaddr_in client_socket, socklen_t clilen, packettype type);
 //void send_ack_packet(int sockID, packettype type, int sequence_num, sockaddr_in client_socket, socklen_t clilen);
@@ -207,9 +211,14 @@ int main(int argc, char * argv[])
 	int thread_param = 31415; //Parameter to pass
 
 	sigevt.sigev_notify = SIGEV_THREAD;
-	sigevt.sigev_notify_function = timer_thread;
 	sigevt.sigev_value.sival_ptr = &thread_param;
+	sigevt.sigev_notify_function =timer_thread;
 	sigevt.sigev_notify_attributes = NULL;
+
+	timerspec.it_value.tv_sec = 1;
+	timerspec.it_value.tv_nsec = 0;
+	timerspec.it_interval.tv_sec = 0;
+	timerspec.it_interval.tv_nsec =0;
 
 
 	if (timer_create(CLOCK_MONOTONIC, &sigevt, &timer) == -1)	
@@ -217,6 +226,8 @@ int main(int argc, char * argv[])
 		cout<<"create time failed!"<<endl;
 		return 1;
 	}
+	else
+		cout<<"timer created"<<endl;
 
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
@@ -242,7 +253,8 @@ int main(int argc, char * argv[])
 	//	cout<<"Packets read and sent: "<<i<<endl;
 	
 		//////start our timer
-
+			timer_settime(timer, 0, &timerspec,0); 
+			cout<<"we have set the timer"<<endl;
 		//wait for recieving ACK
 			void * receiveDataAck = malloc(PTR_SIZE);
 			packet received;
@@ -257,6 +269,7 @@ int main(int argc, char * argv[])
 		//we need to make sure the sequence numbers match, otherwise we resend. :
 			if (received.type == DATA_ACK && sequence_we_got == seq_num)
 			{
+				//timer_delete(timer);
 				cout<<"DATA_ACK received\n";
 				++seq_num;
 				break;//THIS IS NECESSARY OR WE SEND FOREVER
@@ -305,9 +318,20 @@ int main(int argc, char * argv[])
 	return 0;
 }
 
-void timer_thread(void * arg)
+void timer_thread(union sigval arg)
 {
+	cout<<"IN TIMER_THREAD"<<endl;
 	//sigev_notify_function. Called once timer expires
+	int status =pthread_mutex_lock(&mutex);
+	if(status !=0)
+		error_msg( "Locked Mutex");
+	status = pthread_cond_signal(&cond);
+	
+	if(status !=0)
+		error_msg("Signal Condition");
+	status = pthread_mutex_unlock(&mutex);
+	if(status!=0)
+		error_msg( "Unlocked Mutex");
 	cout<<"Hello from the timer.Argument: "<<endl;
 }
 
