@@ -15,6 +15,7 @@
 using namespace std;
 
 //prototypes
+void timer_thread(void * arg);
 void error_msg(const char * message);
 void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
 
@@ -198,6 +199,25 @@ int main(int argc, char * argv[])
 	int seq_num = 4; 
 	int i =0;
 	int sequence_we_got = 0;
+
+	//TIMER PORTION
+	timer_t timer;
+	struct sigevent sigevt;
+	struct itimerspec timerspec;
+	int thread_param = 31415; //Parameter to pass
+
+	sigevt.sigev_notify = SIGEV_THREAD;
+	sigevt.sigev_notify_function = timer_thread;
+	sigevt.sigev_value.sival_ptr = &thread_param;
+	sigevt.sigev_notify_attributes = NULL;
+
+
+	if (timer_create(CLOCK_MONOTONIC, &sigevt, &timer) == -1)	
+	{
+		cout<<"create time failed!"<<endl;
+		return 1;
+	}
+
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
 		
@@ -284,6 +304,14 @@ int main(int argc, char * argv[])
 //	close(sock);
 	return 0;
 }
+
+void timer_thread(void * arg)
+{
+	//sigev_notify_function. Called once timer expires
+	cout<<"Hello from the timer.Argument: "<<endl;
+}
+
+
 
 void error_msg(const char * message)
 {
