@@ -26,6 +26,9 @@ pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 //NO LONGER BEING USED
 //bool myconnect(int sock, struct sockaddr_in client_socket, socklen_t clilen, packettype type);
 //void send_ack_packet(int sockID, packettype type, int sequence_num, sockaddr_in client_socket, socklen_t clilen);
+int globalsock;
+struct sockaddr_in globalclient;
+void * globalptr;
 
 int main(int argc, char * argv[])
 {
@@ -65,6 +68,8 @@ int main(int argc, char * argv[])
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY; //htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(portnum);
+	
+	globalsock = sock;
 
 	//bind socket with server
 	if(bind(sock, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
@@ -127,6 +132,7 @@ int main(int argc, char * argv[])
 		error_msg("Recieve Failed");
 	else
 		cout<<"Recieved"<<endl;
+	globalclient = client_addr;
 	//	cout<<"buffer: "<<(char *)buffer<<endl;//casts the buffer to void *, shows the "filename" we recieved from client
 		
 		//check if we have the file in question
@@ -215,20 +221,21 @@ int main(int argc, char * argv[])
 	sigevt.sigev_notify_function =timer_thread;
 	sigevt.sigev_notify_attributes = NULL;
 
-	timerspec.it_value.tv_sec = 1;
+	timerspec.it_value.tv_sec = 5;
 	timerspec.it_value.tv_nsec = 0;
 	timerspec.it_interval.tv_sec = 0;
 	timerspec.it_interval.tv_nsec =0;
 
 
-	if (timer_create(CLOCK_MONOTONIC, &sigevt, &timer) == -1)	
+/*	if (timer_create(CLOCK_MONOTONIC, &sigevt, &timer) == -1)	
 	{
 		cout<<"create time failed!"<<endl;
 		return 1;
 	}
 	else
-		cout<<"timer created"<<endl;
+		cout<<"timer created"<<endl;*/
 
+	timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
 		
@@ -246,14 +253,14 @@ int main(int argc, char * argv[])
 		//after we have read, we can send the packet
 
 
+//		timer_settime(timer, 0, &timerspec,0); 
 		////////////// CREATE A TIMER ///////////////////////////////////
 		do{
 			send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
-		
+			timer_settime(timer, 0, &timerspec,0); 	
 	//	cout<<"Packets read and sent: "<<i<<endl;
 	
 		//////start our timer
-			timer_settime(timer, 0, &timerspec,0); 
 			cout<<"we have set the timer"<<endl;
 		//wait for recieving ACK
 			void * receiveDataAck = malloc(PTR_SIZE);
@@ -269,17 +276,19 @@ int main(int argc, char * argv[])
 		//we need to make sure the sequence numbers match, otherwise we resend. :
 			if (received.type == DATA_ACK && sequence_we_got == seq_num)
 			{
-				//timer_delete(timer);
+				timer_delete(timer);
 				cout<<"DATA_ACK received\n";
 				++seq_num;
 				break;//THIS IS NECESSARY OR WE SEND FOREVER
 			}
-			
+			timer_delete(timer);
 		}while(sequence_we_got != seq_num);//to continually resend the packet until we receive the ack we are expecting.
 		//////will take care of out of order acks sent, or duplicate acks.
 		//////when we recieve ACK, cancel the timer. 
 		cout<<"i  "<<i<<endl;
 		++i;//we can increment i here because we got past the dowhile.
+	
+		timer_delete(timer);
 	}
 	//end of while(1) for sending and recv packets. 
 //	NEEDED THIS FINAL RECEIVE FOR THE LAST ACK	
@@ -323,16 +332,17 @@ void timer_thread(union sigval arg)
 	cout<<"IN TIMER_THREAD"<<endl;
 	//sigev_notify_function. Called once timer expires
 	int status =pthread_mutex_lock(&mutex);
-	if(status !=0)
-		error_msg( "Locked Mutex");
-	status = pthread_cond_signal(&cond);
-	
-	if(status !=0)
-		error_msg("Signal Condition");
+	while(1){
+	sleep(3);
+	if(sendto(globalsock, globalptr, PTR_SIZE, 0, (struct sockaddr*) &globalclient, sizeof(globalclient))<0)
+		cout<<"We could not send packet from timer:"<<endl;
+	else 
+		cout<<"we sent from the timer"<<endl;
+	}
+
 	status = pthread_mutex_unlock(&mutex);
-	if(status!=0)
-		error_msg( "Unlocked Mutex");
-	cout<<"Hello from the timer.Argument: "<<endl;
+
+	//cout<<"Hello from the timer.Argument: "<<endl;
 }
 
 
@@ -350,6 +360,7 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	//cout<<"SIZE OF DATA = "<<mypacket.size<<endl;
 	//serialize the packet
 	void * to_send = mypacket.serialize();
+	globalptr = to_send;
 	//sendto
 	if(sendto(sockID, to_send, PTR_SIZE, 0, (struct sockaddr*) &client_socket, clilen) < 0)
 		cout<<"Send "<<type<<" failed"<<endl;
