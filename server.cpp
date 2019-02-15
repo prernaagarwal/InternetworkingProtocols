@@ -235,7 +235,7 @@ int main(int argc, char * argv[])
 	else
 		cout<<"timer created"<<endl;*/
 
-	timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
+//	timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
 		
@@ -251,13 +251,15 @@ int main(int argc, char * argv[])
 		
 
 		//after we have read, we can send the packet
+        //	timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
 
 
 //		timer_settime(timer, 0, &timerspec,0); 
 		////////////// CREATE A TIMER ///////////////////////////////////
 		do{
 			send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
-			timer_settime(timer, 0, &timerspec,0); 	
+			timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
+	                timer_settime(timer, 0, &timerspec,0); 	
 	//	cout<<"Packets read and sent: "<<i<<endl;
 	
 		//////start our timer
@@ -270,18 +272,19 @@ int main(int argc, char * argv[])
 				error_msg("ack to begin file transfer failed");
 			else
 				cout<<"Recieved"<<endl;
-			received.deserialize(receiveDataAck);
+			timer_delete(timer);
+                        received.deserialize(receiveDataAck);
 			sequence_we_got= received.sequence_num;//needed for while condition as received only exists in this scope.
 			free(receiveDataAck);
 		//we need to make sure the sequence numbers match, otherwise we resend. :
 			if (received.type == DATA_ACK && sequence_we_got == seq_num)
 			{
-				timer_delete(timer);
+				//timer_delete(timer);
 				cout<<"DATA_ACK received\n";
 				++seq_num;
 				break;//THIS IS NECESSARY OR WE SEND FOREVER
 			}
-			timer_delete(timer);
+		//	timer_delete(timer);
 		}while(sequence_we_got != seq_num);//to continually resend the packet until we receive the ack we are expecting.
 		//////will take care of out of order acks sent, or duplicate acks.
 		//////when we recieve ACK, cancel the timer. 
@@ -334,11 +337,13 @@ void timer_thread(union sigval arg)
 	int status =pthread_mutex_lock(&mutex);
 	while(1){
 	sleep(3);
+       // status = pthread_cond_wait(&cond, &mutex);
 	if(sendto(globalsock, globalptr, PTR_SIZE, 0, (struct sockaddr*) &globalclient, sizeof(globalclient))<0)
 		cout<<"We could not send packet from timer:"<<endl;
 	else 
 		cout<<"we sent from the timer"<<endl;
 	}
+       // kill(0,SIGUSR1);
 
 	status = pthread_mutex_unlock(&mutex);
 

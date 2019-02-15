@@ -21,7 +21,7 @@
 #endif
 
 #ifndef SENDTO_DUP_P
-#define SENDTO_DUP_P 0.01
+#define SENDTO_DUP_P 0.00
 #endif
 
 #ifndef RECVFROM_AVGDELAY_MS
