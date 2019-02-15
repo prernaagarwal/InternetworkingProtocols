@@ -10,6 +10,8 @@
 #include <iostream>
 #include "packets.h"
 #include <math.h>
+#include <signal.h>
+#include <time.h>
 using namespace std;
 
 //prototypes
@@ -211,6 +213,9 @@ int main(int argc, char * argv[])
 		
 
 		//after we have read, we can send the packet
+
+
+		////////////// CREATE A TIMER ///////////////////////////////////
 		do{
 			send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
 		
