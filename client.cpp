@@ -146,10 +146,10 @@ int main(int argc, char * argv[])
 		packet receiveData;
 		receiveData.deserialize(rcv);
 		//cout<<"received"<<endl;
-		if(receiveData.sequence_num == seq_num +1)//if we are the NEXT packet, then we can write.
+		if(receiveData.sequence_num == seq_num +1 && receiveData.size <=1024)//if we are the NEXT packet, then we can write.
 		{
 			seq_num = receiveData.sequence_num;
-		
+			
 			bytesWritten = write(fp, receiveData.data, receiveData.size);//fwrite(receiveData.data, r, PCKLEN , fp);
 			cout<< "Bytes Written = "<<receiveData.size<<endl;
 			totalWritten+=receiveData.size;

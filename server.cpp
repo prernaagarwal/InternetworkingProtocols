@@ -21,6 +21,10 @@ void error_msg(const char * message);
 void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
 
 //pthread things
+timer_t timer;
+struct sigevent sigevt;
+struct itimerspec timerspec;
+
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 //NO LONGER BEING USED
@@ -211,9 +215,9 @@ int main(int argc, char * argv[])
 	int sequence_we_got = 0;
 
 	//TIMER PORTION
-	timer_t timer;
+	/*timer_t timer;
 	struct sigevent sigevt;
-	struct itimerspec timerspec;
+	struct itimerspec timerspec;*/
 	int thread_param = 31415; //Parameter to pass
 
 	sigevt.sigev_notify = SIGEV_THREAD;
@@ -235,7 +239,7 @@ int main(int argc, char * argv[])
 	else
 		cout<<"timer created"<<endl;*/
 
-//	timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
+	timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
 	while(i<=total_packets_to_send){
 		//read from the file. Read into data with size PCKLEN(1024) bytes, up to the total_packets_to_send number of elements.	
 		
@@ -258,7 +262,6 @@ int main(int argc, char * argv[])
 		////////////// CREATE A TIMER ///////////////////////////////////
 		do{
 			send_data_packet(sock, DATA, seq_num, readData, totalbytes, client_addr, clisize);
-			timer_create(CLOCK_MONOTONIC,&sigevt,&timer);	
 	                timer_settime(timer, 0, &timerspec,0); 	
 	//	cout<<"Packets read and sent: "<<i<<endl;
 	
@@ -272,7 +275,7 @@ int main(int argc, char * argv[])
 				error_msg("ack to begin file transfer failed");
 			else
 				cout<<"Recieved"<<endl;
-			timer_delete(timer);
+		//	timer_delete(timer);
                         received.deserialize(receiveDataAck);
 			sequence_we_got= received.sequence_num;//needed for while condition as received only exists in this scope.
 			free(receiveDataAck);
@@ -291,7 +294,7 @@ int main(int argc, char * argv[])
 		cout<<"i  "<<i<<endl;
 		++i;//we can increment i here because we got past the dowhile.
 	
-		timer_delete(timer);
+		//timer_delete(timer);
 	}
 	//end of while(1) for sending and recv packets. 
 //	NEEDED THIS FINAL RECEIVE FOR THE LAST ACK	
@@ -334,16 +337,17 @@ void timer_thread(union sigval arg)
 {
 	cout<<"IN TIMER_THREAD"<<endl;
 	//sigev_notify_function. Called once timer expires
-	int status =pthread_mutex_lock(&mutex);
-	while(1){
-	sleep(3);
+	int status = pthread_mutex_lock(&mutex);
+//	while(1){
+//	sleep(3);
        // status = pthread_cond_wait(&cond, &mutex);
 	if(sendto(globalsock, globalptr, PTR_SIZE, 0, (struct sockaddr*) &globalclient, sizeof(globalclient))<0)
 		cout<<"We could not send packet from timer:"<<endl;
 	else 
 		cout<<"we sent from the timer"<<endl;
-	}
+	
        // kill(0,SIGUSR1);
+	timer_settime(timer,0,&timerspec,0);
 
 	status = pthread_mutex_unlock(&mutex);
 
@@ -365,10 +369,12 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	//cout<<"SIZE OF DATA = "<<mypacket.size<<endl;
 	//serialize the packet
 	void * to_send = mypacket.serialize();
+	pthread_mutex_lock(&mutex);
 	globalptr = to_send;
 	//sendto
 	if(sendto(sockID, to_send, PTR_SIZE, 0, (struct sockaddr*) &client_socket, clilen) < 0)
 		cout<<"Send "<<type<<" failed"<<endl;
+	pthread_mutex_unlock(&mutex);
 	free(to_send);
 //	free(buffer);
 }
