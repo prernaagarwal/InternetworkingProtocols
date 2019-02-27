@@ -5,6 +5,9 @@
 #include <string.h>
 //constructor
 packet::packet(){
+  sequence_num =0;
+  size=0;
+  data = NULL;
 //does nothing
 }
 packet::packet(packettype tp, int sq_num, int size_data, void * buff)

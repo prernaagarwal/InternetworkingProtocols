@@ -22,6 +22,8 @@ using namespace std;
 void timer_thread(union sigval arg);
 void error_msg(const char * message);
 void send_data_packet(int sockID, packettype type, int sequence_num, void* buffer, int size, sockaddr_in client_socket, socklen_t clilen);
+void *sender(void * args);
+void *receiver(void * args);
 
 //pthread things
 timer_t timer;
@@ -30,12 +32,25 @@ struct itimerspec timerspec;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-//NO LONGER BEING USED
-//bool myconnect(int sock, struct sockaddr_in client_socket, socklen_t clilen, packettype type);
-//void send_ack_packet(int sockID, packettype type, int sequence_num, sockaddr_in client_socket, socklen_t clilen);
+pthread_t sendthread;
+pthread_t recvthread;
+
+
 int globalsock;
 struct sockaddr_in globalclient;
 void * globalptr;
+
+//GLOBALS FOR PROJECT 2 
+//currentbase and shiftedby are part of critical section, both threads will update them.
+int N; //window size 
+int retransmitted; //number of retransmitted packets
+int totalpacketssent; //number of total packets sent, including retransmissions
+int currentbase; //the curent base packet number (for the window)
+int shiftedby; //number of elements the window has shifted.
+FILE * gfile;//filename
+int gfilesize;//for the file size
+
+packet * array;//array of packets, also critical section. Dynamically allocated in main.
 
 int main(int argc, char * argv[])
 {
@@ -56,14 +71,26 @@ int main(int argc, char * argv[])
 		printf("No Port Number Provided");
 		exit(1);
 	}
+        //check if we were given a window size
+        if(argc < 3)
+        {
+            cout<<"No window size provided." <<endl;
+            exit(1);
+        }
 
 	// set serv_addr to 0	
 	memset(&serv_addr, 0, sizeof(serv_addr));
-	//bzero((char *) &serv_addr, sizeof(serv_addr));
-	//bzero((char *) &client_addr, sizeof(client_addr));
 	
 	//set the port num to what was passed in. String to int.
 	portnum = atoi(argv[1]);	
+
+
+        N = atoi(argv[2]);//set the window size to the argument passed in
+        array = new packet[N];//dynamically allocate the array of packets. Has to be dynamic as the user
+        //passes in a size at runtime. 
+        shiftedby = N;//setting shifted by to N here so that when we first start
+        //the sending thread, it will read N items into the array. 
+
 
 	//create socket
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -100,7 +127,6 @@ int main(int argc, char * argv[])
 	else
 		cout<<"Recieved"<<endl;
 	globalclient = client_addr;
-	//cout<<"buffer: "<<(char *)buffer<<endl;//casts the buffer to void *, shows the "filename" we recieved from client
 		
 	//check if we have the file in question
 
@@ -128,6 +154,7 @@ int main(int argc, char * argv[])
 	
 	// open the file	
 	FILE * file = fopen(filerequested, "r");
+        gfile = file;//point to file too.
 	if(file == NULL)
 		cout<<"File Open is NULL"<<endl;	
 
@@ -137,6 +164,7 @@ int main(int argc, char * argv[])
 	stat(filerequested, &file_stat);
 	filesize = file_stat.st_size;
 	cout<<"file size = " <<filesize<<endl;
+        gfilesize = filesize;
 
 
 	//create pointer to point to the file size so that we may pass this back to the client in our SYN_ACK
@@ -159,7 +187,7 @@ int main(int argc, char * argv[])
 	if (beginpacket.type == ACK)
 		cout<<"ACK to transfer file received\n";
 	
-	
+/*	
 	//total bytes we have sent to client. will let us know when to close the connection
 	int totalbytes =0;
 	float total_packets_to_send = ceil(filesize /1024.0);//the number of packets we will be sending rounded up
@@ -237,7 +265,11 @@ int main(int argc, char * argv[])
 		cout<<"i  "<<i<<endl;
 		++i;//we can increment i here because we got past the dowhile.
 	
-	}
+	}*/ //THIS WAS ALL PROJECT 1 AND CAN BE DELETED ONCE THINGS WORK
+
+        //CREATE THE THREADS
+        pthread_create(&sendthread, NULL, sender, NULL);
+        pthread_create(&recvthread, NULL, receiver, NULL);
 
 	// close connection
 	cout<<"sending close request"<<endl;
@@ -260,15 +292,21 @@ int main(int argc, char * argv[])
 	else{
 		cout<<"NOT A CLOSE PACKET"<<endl;	
 	}
+
+        /****************/
+        //need to delete all the packets in the array!!
+        
+
+
+
+
 	//free the memory
-	free(readData);
+//	free(readData);
 	free(buffer);
 	free(close);
-//	fclose(file);
 //	// comment this free when files is closed
 
 	free(file);
-//	close(sock);
 	return 0;
 }
 
@@ -279,18 +317,25 @@ void timer_thread(union sigval arg)
 	//sigev_notify_function. Called once timer expires
 	
 	// acquire the lock
-	int status = pthread_mutex_lock(&mutex);
-
-	if(sendto(globalsock, globalptr, PTR_SIZE, 0, (struct sockaddr*) &globalclient, sizeof(globalclient))<0)
+	pthread_mutex_lock(&mutex);
+        for(int i =0; i<N; ++i)
+        { 
+          void * send = array[i].serialize();
+	  if(sendto(globalsock, send, PTR_SIZE, 0, (struct sockaddr*) &globalclient, sizeof(globalclient))<0)
 		cout<<"We could not send packet from timer:"<<endl;
-	else 
+	  else 
 		cout<<"we sent from the timer"<<endl;
+          ++retransmitted;
+          ++totalpacketssent;
+          
+        }
+        shiftedby = 0;
 
 	// reset the timer	
 	timer_settime(timer,0,&timerspec,0);
 
 	// release the lock
-	status = pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&mutex);
 
 }
 
@@ -317,3 +362,59 @@ void send_data_packet(int sockID, packettype type, int sequence_num, void* buffe
 	free(to_send);
 }
 
+//This function will be the function that executes on a single thread. Its purpose
+//is to only send packets
+void *sender(void * args)
+{
+ 
+        int totalbytes =0;
+	float total_packets_to_send = ceil(gfilesize /1024.0);//the number of packets we will be sending rounded up
+	cout<<"total packets to be sent" <<total_packets_to_send<<endl;
+			
+	//to loop while we transfer the files. 
+	void * readData = malloc(PCKLEN);
+	int seq_num = 4; // sequence number of the packet after initial syn, syn_ack, ack
+	int i =0;
+	int sequence_we_got = 0;
+
+	int thread_param = 31415; //Parameter to pass
+ 
+
+        sigevt.sigev_notify = SIGEV_THREAD;
+	sigevt.sigev_value.sival_ptr = &thread_param;
+	sigevt.sigev_notify_function =timer_thread;
+	sigevt.sigev_notify_attributes = NULL;
+
+	// populate timerspec
+	timerspec.it_value.tv_sec = 5;
+	timerspec.it_value.tv_nsec = 0;
+	timerspec.it_interval.tv_sec = 0;
+	timerspec.it_interval.tv_nsec =0;
+
+	//creat timer
+	timer_create(CLOCK_MONOTONIC,&sigevt,&timer); //this timer will need to retransmit each packet
+
+	// loop until we send all the packets
+	while(i<=total_packets_to_send){
+                
+		//read chunks of PCKLEN(1024) from the file into readData where size of each object to be read (byte) is 1
+		totalbytes = fread(readData, 1, PCKLEN, gfile);
+		//cout<<"totalbytes: "<<totalbytes<<endl;
+		if (totalbytes <= 0 )
+		{
+			cout<<"Read the whole file"<<endl;
+			break;
+		}
+
+        }
+
+        free(readData);
+}
+
+//This function will be the function that executes on a single thread to implement
+//the go-back-N protocol. This thread will continually read acks from the client
+//and update the necessary variables within a lock.
+void *receiver(void *args)
+{
+
+}
