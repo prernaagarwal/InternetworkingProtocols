@@ -461,12 +461,19 @@ void *receiver(void *args)
 
 		}
 
-		//shifting the elements in the array
-		for (int i = 0; i < N - shiftedby; ++i)
+		if (shiftedby == N)
 		{
-			array[i] = array[i+shiftedby];
+			//then no shifting has taken place. fill the whole array 
+			//with new packets in sender thread
 		}
-
+		else
+		{
+			//shifting the elements in the array
+			for (int i = 0; i < N - shiftedby; ++i)
+			{
+				array[i] = array[i+shiftedby];
+			}
+		}
 
 		pthread_mutex_unlock(&mutex);
 	}
