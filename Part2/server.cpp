@@ -38,6 +38,7 @@ pthread_t recvthread;
 
 int globalsock;
 struct sockaddr_in globalclient;
+socklen_t globalclisize;
 void * globalptr;
 
 //GLOBALS FOR PROJECT 2 
@@ -50,6 +51,7 @@ int shiftedby; //number of elements the window has shifted.
 FILE * gfile;//filename
 int gfilesize;//for the file size
 double total_time; //store total time taken for file transfer
+int acknum = 4;// global ack number
 
 packet * array;//array of packets, also critical section. Dynamically allocated in main.
 
@@ -128,6 +130,7 @@ int main(int argc, char * argv[])
 	else
 		cout<<"Recieved"<<endl;
 	globalclient = client_addr;
+	globalclisize = clisize;
 		
 	//check if we have the file in question
 
@@ -268,12 +271,12 @@ int main(int argc, char * argv[])
 	
 	}*/ //THIS WAS ALL PROJECT 1 AND CAN BE DELETED ONCE THINGS WORK
 
+	// begin file transfer
+	clock_t begin = clock();
         //CREATE THE THREADS
         pthread_create(&sendthread, NULL, sender, NULL);
         pthread_create(&recvthread, NULL, receiver, NULL);
 
-	// begin file transfer
-	clock_t begin = clock();
 
 	// File transfer algo
 	//
@@ -434,5 +437,29 @@ void *sender(void * args)
 //and update the necessary variables within a lock.
 void *receiver(void *args)
 {
+
+	while(1)
+	{
+
+		void * receiveAck= malloc(PTR_SIZE);	
+		int ret = recvfrom(globalsock, receiveAck, PTR_SIZE, 0, (struct sockaddr*)&globalclient, &globalclisize);
+		if(ret < 0)
+			error_msg("Failed to receive data ack");
+
+		cout<<"received ack in server"<<endl;
+		packet rcv;	
+		rcv.deserialize(receiveAck);
+		free(receiveAck);
+		
+		pthread_mutex_lock(&mutex);
+		if(rcv.type == DATA_ACK && rcv.sequence_num == acknum)
+		{
+			currentbase = acknum + 1;
+			++acknum;		
+			++shiftedby;
+		}
+
+		pthread_mutex_unlock(&mutex);
+	}
 
 }
