@@ -446,9 +446,9 @@ void *receiver(void *args)
 		if(ret < 0)
 			error_msg("Failed to receive data ack");
 
-		cout<<"received ack in server"<<endl;
 		packet rcv;	
 		rcv.deserialize(receiveAck);
+		cout<<"received ack in server:"<<rcv.sequence_num<<endl;
 		free(receiveAck);
 		
 		pthread_mutex_lock(&mutex);
