@@ -452,12 +452,21 @@ void *receiver(void *args)
 		free(receiveAck);
 		
 		pthread_mutex_lock(&mutex);
-		if(rcv.type == DATA_ACK && rcv.sequence_num == acknum)
+		if(rcv.type == DATA_ACK && rcv.sequence_num >= acknum)
 		{
+			int oldbase = currentbase;
 			currentbase = acknum + 1;
+			shiftedby = currentbase - oldbase;
 			++acknum;		
-			++shiftedby;
+
 		}
+
+		//shifting the elements in the array
+		for (int i = 0; i < N - shiftedby; ++i)
+		{
+			array[i] = array[i+shiftedby];
+		}
+
 
 		pthread_mutex_unlock(&mutex);
 	}
