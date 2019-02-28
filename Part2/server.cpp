@@ -436,7 +436,7 @@ void *sender(void * args)
           cout<<"Read the whole file"<<endl;
           break;
         }
-        int place = currentbase+(N-1)-shiftedby+j;
+        int place = N-shiftedby+j;
         array[place].update(seq_num, totalbytes, readData);//updates the data in the packet.
         void * tosend = array[place].serialize();//serialize before sending
         if(sendto(globalsock,tosend, PTR_SIZE, 0, (struct sockaddr*)&globalclient, sizeof(globalclient))<0)
