@@ -49,6 +49,7 @@ int currentbase; //the curent base packet number (for the window)
 int shiftedby; //number of elements the window has shifted.
 FILE * gfile;//filename
 int gfilesize;//for the file size
+double total_time; //store total time taken for file transfer
 
 packet * array;//array of packets, also critical section. Dynamically allocated in main.
 
@@ -271,6 +272,23 @@ int main(int argc, char * argv[])
         pthread_create(&sendthread, NULL, sender, NULL);
         pthread_create(&recvthread, NULL, receiver, NULL);
 
+	// begin file transfer
+	clock_t begin = clock();
+
+	// File transfer algo
+	//
+	//
+	//
+	//
+	//
+
+	//File transfer complete
+	clock_t end = clock();
+
+
+	//Time taken for file transfer in seconds
+	total_time = (double)(end-begin)/CLOCKS_PER_SEC;
+	
 	// close connection
 	cout<<"sending close request"<<endl;
 	
