@@ -437,7 +437,7 @@ void *sender(void * args)
           break;
         }
         int place = N-shiftedby+j;
-        array[place].update(seq_num, totalbytes, readData);//updates the data in the packet.
+        array[place].update(DATA,seq_num, totalbytes, readData);//updates the data in the packet.
         void * tosend = array[place].serialize();//serialize before sending
         if(sendto(globalsock,tosend, PTR_SIZE, 0, (struct sockaddr*)&globalclient, sizeof(globalclient))<0)
         {

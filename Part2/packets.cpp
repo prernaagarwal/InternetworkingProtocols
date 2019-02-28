@@ -79,8 +79,9 @@ void * packet::serialize()
 }
 
 //updates the current information in a packet
-void packet ::update(int seq_num, int newsize, void * buffer)
+void packet ::update(packettype newtype, int seq_num, int newsize, void * buffer)
 {
+  this->type = newtype;
   this->sequence_num =seq_num;
   this->size = newsize;
   if(this->data)

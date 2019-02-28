@@ -56,7 +56,7 @@ struct packet{
 	packet(void * buff);
 	void * serialize();
 	void deserialize(void * buff);//deserialize a packet
-        void update(int seq_num, int newsize, void * buffer);
+        void update(packettype newtype,int seq_num, int newsize, void * buffer);
 	~packet();
 
 	packettype type;
