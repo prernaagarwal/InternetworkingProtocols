@@ -78,6 +78,17 @@ void * packet::serialize()
 
 }
 
+//updates the current information in a packet
+void packet ::update(int seq_num, int newsize, void * buffer)
+{
+  this->sequence_num =seq_num;
+  this->size = newsize;
+  if(this->data)
+    free(this->data);
+  this->data =malloc(PCKLEN);
+  memcpy(this->data, buffer, PCKLEN);
+}
+
 packet::~packet()
 {
 	free(data);
