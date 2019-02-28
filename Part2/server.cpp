@@ -479,28 +479,44 @@ void *sender(void * args)
 void *receiver(void *args)
 {
 
-  while(1)
-  {
+	while(1)
+	{
 
-    void * receiveAck= malloc(PTR_SIZE);	
-    int ret = recvfrom(globalsock, receiveAck, PTR_SIZE, 0, (struct sockaddr*)&globalclient, &globalclisize);
-    if(ret < 0)
-      error_msg("Failed to receive data ack");
+		void * receiveAck= malloc(PTR_SIZE);	
+		int ret = recvfrom(globalsock, receiveAck, PTR_SIZE, 0, (struct sockaddr*)&globalclient, &globalclisize);
+		if(ret < 0)
+			error_msg("Failed to receive data ack");
 
-    packet rcv;	
-    rcv.deserialize(receiveAck);
-    cout<<"received ack in server:"<<rcv.sequence_num<<endl;
-    free(receiveAck);
+		packet rcv;	
+		rcv.deserialize(receiveAck);
+		cout<<"received ack in server:"<<rcv.sequence_num<<endl;
+		free(receiveAck);
+		
+		pthread_mutex_lock(&mutex);
+		if(rcv.type == DATA_ACK && rcv.sequence_num >= acknum)
+		{
+			int oldbase = currentbase;
+			currentbase = acknum + 1;
+			shiftedby = currentbase - oldbase;
+			++acknum;		
 
-    pthread_mutex_lock(&mutex);
-    if(rcv.type == DATA_ACK && rcv.sequence_num == acknum)
-    {
-      currentbase = acknum + 1;
-      ++acknum;		
-      ++shiftedby;
-    }
+		}
 
-    pthread_mutex_unlock(&mutex);
-  }
+		if (shiftedby == N)
+		{
+			//then no shifting has taken place. fill the whole array 
+			//with new packets in sender thread
+		}
+		else
+		{
+			//shifting the elements in the array
+			for (int i = 0; i < N - shiftedby; ++i)
+			{
+				array[i] = array[i+shiftedby];
+			}
+		}
+
+		pthread_mutex_unlock(&mutex);
+	}
 
 }
