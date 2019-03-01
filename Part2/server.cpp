@@ -53,7 +53,7 @@ FILE * gfile;//filename
 int gfilesize;//for the file size
 double total_time; //store total time taken for file transfer
 int acknum = 4;// global ack number
-int lastackrecv;
+int lastackrcv;
 
 packet * array;//array of packets, also critical section. Dynamically allocated in main.
 
@@ -218,7 +218,7 @@ int main(int argc, char * argv[])
 
   //Time taken for file transfer in seconds
   total_time = (double)(end-begin)/CLOCKS_PER_SEC;
-  cout<<"Total_time taken: "<<total_time<<endl;
+  cout<<"Total time taken: "<<total_time<<endl;
   // close connection
   cout<<"sending close request"<<endl;
 
@@ -411,22 +411,14 @@ void *receiver(void *args)
     {
       if(rcv.type == DATA_ACK && rcv.sequence_num >= acknum && rcv.sequence_num < currentbase+N)
       {
+	lastackrcv = rcv.sequence_num;
         int oldbase = currentbase;
         currentbase = rcv.sequence_num + 1;
         shiftedby = currentbase - oldbase;
         acknum = rcv.sequence_num+1;		
 
 
-
-        if (shiftedby == N)
-        {
-          //then no shifting has taken place. fill the whole array 
-          //with new packets in sender thread
-          //
-          //you could have just made this 1 condition..
-          //if(shiftedby < N). or if(shiftedby !=N)...
-        }
-        else
+        if (shiftedby != N)
         {
           //shifting the elements in the array
           cout<<"shfiting by: "<<shiftedby<<endl;
@@ -436,21 +428,26 @@ void *receiver(void *args)
             array[i].update(array[i+shiftedby]);
           }
         }
+        else
+        {
+          //then no shifting has taken place. fill the whole array 
+          //with new packets in sender thread
+        }
       }
     }
     else
       shiftedby = 0;
 
-//    cout<<"SHIFTED BY: "<<shiftedby<<endl;
 
-    if(totalpacketssent == total_to_be_sent)
+    if (lastackrcv == total_to_be_sent + 3)
     {
-      pthread_mutex_unlock(&mutex);
-      break;
+	    pthread_mutex_unlock(&mutex);
+	    break;
+	    //pthread_exit(NULL);
     }
+
     pthread_mutex_unlock(&mutex);
   }
-
 }
 
 // function for error message

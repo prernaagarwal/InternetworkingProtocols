@@ -9,11 +9,11 @@
 // Usage: To enable include -Wl,-wrap=sendto -Wl,-wrap=recvfrom as g++ flags
 
 #ifndef SENDTO_DROP_SIZE
-#define SENDTO_DROP_SIZE 0.00
+#define SENDTO_DROP_SIZE 0.01
 #endif
 
 #ifndef SENDTO_DROP_P
-#define SENDTO_DROP_P 0.00
+#define SENDTO_DROP_P 0.01
 #endif
 
 #ifndef SENDTO_INTIAL_COUNT
@@ -21,7 +21,7 @@
 #endif
 
 #ifndef SENDTO_DUP_P
-#define SENDTO_DUP_P 0.00
+#define SENDTO_DUP_P 0.01
 #endif
 
 #ifndef RECVFROM_AVGDELAY_MS
