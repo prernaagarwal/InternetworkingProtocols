@@ -375,6 +375,7 @@ void *sender(void * args)
   totalpacketssent +=retransmitted;//Output the total number of packets sent after we are done sending
   //all the packets.
   cout<<"TOTAL RETRANSMISSIONS: " <<totalpacketssent <<endl;
+  timer_delete();//no longer needed
 
   free(readData);
 }
@@ -435,7 +436,7 @@ void *receiver(void *args)
     else
       shiftedby = 0;
 
-    cout<<"SHIFTED BY: "<<shiftedby<<endl;
+//    cout<<"SHIFTED BY: "<<shiftedby<<endl;
     pthread_mutex_unlock(&mutex);
   }
 
