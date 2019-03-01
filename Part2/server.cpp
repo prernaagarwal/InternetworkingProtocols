@@ -215,10 +215,6 @@ int main(int argc, char * argv[])
   //File transfer complete
   clock_t end = clock();
 
-
-  //Time taken for file transfer in seconds
-  total_time = (double)(end-begin)/CLOCKS_PER_SEC;
-  cout<<"Total time taken: "<<total_time<<endl;
   // close connection
   cout<<"sending close request"<<endl;
 
@@ -241,6 +237,14 @@ int main(int argc, char * argv[])
   {
     cout<<"NOT A CLOSE PACKET"<<endl;	
   }
+  cout<<"####STATISTICS####"<<endl;
+  //Time taken for file transfer in seconds
+  total_time = (double)(end-begin)/CLOCKS_PER_SEC;
+  cout<<"Total time taken: "<<total_time<<" sec"<<endl;
+  cout<<"Total packets retransmitted: "<<retransmitted<<endl;
+  cout<<"Total packets sent (without retransmission): "<< totalpacketssent - retransmitted<<endl;
+  cout<<"Total packets sent (with retransmission): "<<totalpacketssent<<endl;
+  cout<<"#################"<<endl;
 
   //free the memory
   //	free(readData);
