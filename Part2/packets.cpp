@@ -15,7 +15,6 @@ packet::packet(packettype tp, int sq_num, int size_data, void * buff)
 	this->type = tp;
 	this->sequence_num = sq_num;
 	this->size = size_data;
-	
 	this->data = malloc(PCKLEN);
 	memcpy(this->data, buff, PCKLEN);
 }
