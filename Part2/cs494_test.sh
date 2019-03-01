@@ -1,6 +1,6 @@
 #!/bin/bash
 testfile="./test.jpg"
-port=1080
+port=1081
 ip="127.0.0.1"
 size="10"
 server="./cs494rcp_server"

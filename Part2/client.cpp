@@ -126,9 +126,10 @@ int main(int argc, char * argv[])
   cout<<"Ready to receive the file"<<endl;
 
   //FILE * fp;
-  //fp = fopen("test1.jpg" , "wb" );
+  //fp = fopen("test.jpg.out" , "wb" );
   // Open the file to write
   int fp = open("test.jpg.out", O_CREAT | O_WRONLY | O_EXCL,S_IRWXU);	
+
 
   void * rcv = malloc(PTR_SIZE);
   int seq_num = -1;//3 because we are starting with 4 serverside. 3 for handshake.
