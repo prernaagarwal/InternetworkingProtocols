@@ -46,6 +46,7 @@ void * globalptr;
 int N; //window size 
 int retransmitted; //number of retransmitted packets
 int totalpacketssent; //number of total packets sent, including retransmissions
+float total_to_be_sent;
 int currentbase; //the curent base packet number (for the window)
 int shiftedby; //number of elements the window has shifted.
 FILE * gfile;//filename
@@ -286,6 +287,7 @@ void *sender(void * args)
 
   int totalbytes =0;
   float total_packets_to_send = ceil(gfilesize /1024.0);//the number of packets we will be sending rounded up
+  total_to_be_sent = total_packets_to_send;
   cout<<"total packets to be sent" <<total_packets_to_send<<endl;
 
   //to loop while we transfer the files. 
@@ -315,7 +317,8 @@ void *sender(void * args)
   //  while(totalpacketssent<=total_packets_to_send)
   int status;
   cout<<"before server send"<<endl;
-  while(1)
+  //while(1)
+  while(totalpacketssent <= total_packets_to_send)
   {
 
     //get the lock
@@ -375,9 +378,10 @@ void *sender(void * args)
   totalpacketssent +=retransmitted;//Output the total number of packets sent after we are done sending
   //all the packets.
   cout<<"TOTAL RETRANSMISSIONS: " <<totalpacketssent <<endl;
-  timer_delete(&timer);//no longer needed
+  timer_delete(timer);//no longer needed
 
   free(readData);
+
 }
 
 //This function will be the function that executes on a single thread to implement
@@ -428,7 +432,8 @@ void *receiver(void *args)
           cout<<"shfiting by: "<<shiftedby<<endl;
           for (int i = 0; i < (N - shiftedby); ++i)
           {
-            array[i] = array[i+shiftedby];
+            //array[i] = array[i+shiftedby];
+            array[i].update(array[i+shiftedby]);
           }
         }
       }
@@ -437,6 +442,12 @@ void *receiver(void *args)
       shiftedby = 0;
 
 //    cout<<"SHIFTED BY: "<<shiftedby<<endl;
+
+    if(totalpacketssent == total_to_be_sent)
+    {
+      pthread_mutex_unlock(&mutex);
+      break;
+    }
     pthread_mutex_unlock(&mutex);
   }
 

@@ -128,7 +128,7 @@ int main(int argc, char * argv[])
   //FILE * fp;
   //fp = fopen("test.jpg.out" , "wb" );
   // Open the file to write
-  int fp = open("test.jpg.out", O_CREAT | O_WRONLY | O_EXCL,S_IRWXU);	
+  int fp = open("test.jpg.out", O_CREAT | O_TRUNC | O_WRONLY | O_EXCL,S_IRWXU);	
 
 
   void * rcv = malloc(PTR_SIZE);

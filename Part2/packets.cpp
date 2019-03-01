@@ -89,7 +89,21 @@ void packet ::update(packettype newtype, int seq_num, int newsize, void * buffer
   memcpy(this->data, buffer, PCKLEN);
 }
 
+void packet :: update(packet &tocopy)
+{
+  this->type = tocopy.type;
+  this->sequence_num = tocopy.sequence_num;
+  this->size = tocopy.size;
+  if(this->data)
+    free(this->data);
+  this->data = malloc(PCKLEN);
+  //memset(this->data, 0, PCKLEN);
+  memcpy(this->data, tocopy.data, PCKLEN);
+}
+
 packet::~packet()
 {
-	free(data);
+
+  if(data)
+    free(data);
 }
