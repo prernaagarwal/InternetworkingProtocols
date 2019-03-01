@@ -2,6 +2,7 @@
 testfile="./test.jpg"
 port=1080
 ip="127.0.0.1"
+size="10"
 server="./cs494rcp_server"
 client="./cs494rcp_client"
 
@@ -10,7 +11,7 @@ clientout="/dev/null"
 
 #start server in background. Redirect output to serverout
 echo "Starting $server..."
-$server $port &>$serverout &
+$server $port $size &>$serverout &
 
 #wait one second before starting client. Redirect output to clientout
 sleep 1
