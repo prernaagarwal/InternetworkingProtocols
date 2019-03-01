@@ -375,7 +375,7 @@ void *sender(void * args)
   totalpacketssent +=retransmitted;//Output the total number of packets sent after we are done sending
   //all the packets.
   cout<<"TOTAL RETRANSMISSIONS: " <<totalpacketssent <<endl;
-  timer_delete();//no longer needed
+  timer_delete(&timer);//no longer needed
 
   free(readData);
 }
