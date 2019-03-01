@@ -130,7 +130,8 @@ int main(int argc, char * argv[])
 	int fp = open("test.jpg.out", O_CREAT | O_WRONLY | O_EXCL,S_IRWXU);	
 
 	void * rcv = malloc(PTR_SIZE);
-	int seq_num = 3;//3 because we are starting with 4 serverside. 3 for handshake.
+	int seq_num = -1;//3 because we are starting with 4 serverside. 3 for handshake.
+	int expected_seq_num = 4; // on server side, we are starting with seq num = 4
 	int bytesWritten=0;
 	int totalWritten =0;
 	while(1)
@@ -144,24 +145,27 @@ int main(int argc, char * argv[])
 		}
 		packet receiveData;
 		receiveData.deserialize(rcv);
-		//cout<<"received"<<endl;
 		
+		seq_num = receiveData.sequence_num;
+		cout<<"Received: "<<seq_num<<" Expected: "<<expected_seq_num<<endl;	
 		//check the sequence number of the packet received
-		if(receiveData.sequence_num == seq_num +1 && receiveData.size <=1024)//if we are the NEXT packet, then we can write.
+		if(receiveData.sequence_num == expected_seq_num && receiveData.size <=1024)
 		{
-			seq_num = receiveData.sequence_num;
+			expected_seq_num += 1;
 			//write the bytes to the files
 			bytesWritten = write(fp, receiveData.data, receiveData.size);
 			cout<< "Bytes Written = "<<receiveData.size<<endl;
 			totalWritten+=receiveData.size;
 		}//else if we got the same packet twice, dont rewrite but resend the packet.
-		
+		else
+		{
+			
+		}	
 		//Send the packet received acknowledgement to the server
 		void * nodata = malloc(PCKLEN);
 		memset(nodata, 0, PCKLEN);
 		
 		packet confirmData(DATA_ACK,seq_num, 0, nodata);
-		cout<<"Received "<<seq_num<<endl;	
 		//cout<<"File:: "<<(char*)filerequest.data<<endl;
 		void * confirmed = confirmData.serialize();
 

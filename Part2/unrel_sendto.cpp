@@ -13,7 +13,7 @@
 #endif
 
 #ifndef SENDTO_DROP_P
-#define SENDTO_DROP_P 0.02
+#define SENDTO_DROP_P 0.01
 #endif
 
 #ifndef SENDTO_INTIAL_COUNT
