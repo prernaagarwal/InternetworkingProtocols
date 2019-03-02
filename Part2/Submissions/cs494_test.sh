@@ -1,4 +1,5 @@
 #!/bin/bash
+outputfile="./test.jpg.out"
 testfile="./test.jpg"
 port=1080
 ip="127.0.0.1"
@@ -8,6 +9,11 @@ client="./cs494rcp_client"
 
 serverout="/dev/null"
 clientout="/dev/null"
+
+#delete output file if it exists
+if [ -f $outputfile ]; then
+	rm $outputfile
+fi
 
 #start server in background. Redirect output to serverout
 echo "Starting $server..."

@@ -422,7 +422,7 @@ void *receiver(void *args)
 				if (shiftedby != N)
 				{
 					//left shifting the elements in the array
-					cout<<"shfiting by: "<<shiftedby<<endl;
+					//cout<<"shfiting by: "<<shiftedby<<endl;
 					for (int i = 0; i < (N - shiftedby); ++i)
 					{
 						//array[i] = array[i+shiftedby];
